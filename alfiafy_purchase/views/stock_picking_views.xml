@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Receipt: sourcing badge + import shipment info from the PO -->
+    <record id="view_picking_form_alfiafy_purchase" model="ir.ui.view">
+        <field name="name">stock.picking.form.alfiafy.purchase</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="after">
+                <field name="sourcing_type" invisible="1"/>
+                <field name="purchase_type" invisible="1"/>
+                <span class="badge rounded-pill text-bg-success float-end ms-1 fs-6"
+                      invisible="sourcing_type != 'partner'">Official Partner</span>
+                <span class="badge rounded-pill text-bg-warning float-end ms-1 fs-6"
+                      invisible="sourcing_type != 'outside'">Outside Supplier</span>
+                <span class="badge rounded-pill text-bg-primary float-end ms-1 fs-6"
+                      invisible="purchase_type != 'import'">Import Shipment</span>
+            </xpath>
+            <xpath expr="//page[@name='extra']" position="before">
+                <page string="Import Shipment" name="alfiafy_import_shipment"
+                      invisible="purchase_type != 'import'">
+                    <group>
+                        <group>
+                            <field name="po_shipment_status"/>
+                            <field name="po_container_no"/>
+                            <field name="po_bl_awb_no"/>
+                        </group>
+                        <group>
+                            <field name="po_etd"/>
+                            <field name="po_eta"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="vpicktree_alfiafy_purchase" model="ir.ui.view">
+        <field name="name">stock.picking.list.alfiafy.purchase</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="sourcing_type" widget="badge" optional="show"
+                       decoration-success="sourcing_type == 'partner'"
+                       decoration-warning="sourcing_type == 'outside'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Lot / batch: sourcing stamped at receipt -->
+    <record id="view_production_lot_form_alfiafy_purchase" model="ir.ui.view">
+        <field name="name">stock.lot.form.alfiafy.purchase</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='ref']" position="after">
+                <field name="sourcing_type" widget="badge"
+                       decoration-success="sourcing_type == 'partner'"
+                       decoration-warning="sourcing_type == 'outside'"
+                       invisible="not sourcing_type"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_production_lot_tree_alfiafy_purchase" model="ir.ui.view">
+        <field name="name">stock.lot.list.alfiafy.purchase</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="sourcing_type" widget="badge" optional="show"
+                       decoration-success="sourcing_type == 'partner'"
+                       decoration-warning="sourcing_type == 'outside'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="search_product_lot_filter_alfiafy_purchase" model="ir.ui.view">
+        <field name="name">stock.lot.search.alfiafy.purchase</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.search_product_lot_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <filter string="Official Partner" name="sourcing_partner" domain="[('sourcing_type', '=', 'partner')]"/>
+                <filter string="Outside Supplier" name="sourcing_outside" domain="[('sourcing_type', '=', 'outside')]"/>
+                <filter string="Sourcing" name="group_sourcing" context="{'group_by': 'sourcing_type'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

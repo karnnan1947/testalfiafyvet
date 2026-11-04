@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+        <!-- Odoo 20: product.product_variant_easy_edit_view no longer exists; the
+             variant form (product_normal_form_view) is a primary view built on
+             product_template_form_view, so it inherits the restriction below. -->
+        <record id="product_product_tree_view_inherit" model="ir.ui.view">
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_product_tree_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='standard_price']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+            </field>
+        </record>
+        <record id="product_template_form_view_inherit" model="ir.ui.view">
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//label[@for='standard_price']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//div[@name='standard_price_uom']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//page[@name='purchase']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="product_template_tree_view_inherit" model="ir.ui.view">
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_tree_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='standard_price']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_product_margin_form_inherit" model="ir.ui.view">
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product_margin.view_product_margin_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='standard_price']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='total_margin']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='expected_margin']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='total_margin_rate']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='expected_margin_rate']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_product_margin_graph_inherit" model="ir.ui.view">
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product_margin.view_product_margin_graph"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='total_margin']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_product_margin_tree_inherit" model="ir.ui.view">
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product_margin.view_product_margin_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='total_margin']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='expected_margin']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='total_margin_rate']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='expected_margin_rate']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+            </field>
+        </record> 
+        <record id="view_product_stock_tree_inherit" model="ir.ui.view">
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="stock_account.product_product_stock_tree_inherit_stock_account"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='avg_cost']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='total_value']" position="attributes">    
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+            </field>
+        </record>
+
+
+    </data>
+</odoo>

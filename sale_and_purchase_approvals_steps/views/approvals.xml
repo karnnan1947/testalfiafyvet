@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="view_approval_steps_tree" model="ir.ui.view">
+            <field name="name">approval.steps.tree</field>
+            <field name="model">approval.steps</field>
+            <field name="arch" type="xml">
+                <list string="Approval Steps" editable="bottom">
+                    <field name="type"/>
+                    <field name="sequence"/>
+                    <field name="user_id"/>
+
+                    <!-- Dynamic Sale Condition Builder (Sale only) -->
+                    <field name="sale_criteria_type" invisible="type != 'sale'" required="type == 'sale'"/>
+
+                    <!-- Amount Operator / Value: used by both Sale (when criteria includes
+                         amount) and Purchase (always) -->
+                    <field name="amount_operator"
+                           invisible="type == 'sale' and sale_criteria_type == 'margin'"
+                           required="type in ('purchase', 'delivery') or (type == 'sale' and sale_criteria_type != 'margin')"/>
+                    <field name="amount_value"
+                           invisible="type == 'sale' and sale_criteria_type == 'margin'"
+                           required="type in ('purchase', 'delivery') or (type == 'sale' and sale_criteria_type != 'margin')"/>
+                    <field name="amount_base"
+                           invisible="type == 'sale' and sale_criteria_type == 'margin'"/>
+
+                    <field name="logic_operator"
+                           invisible="type != 'sale' or sale_criteria_type != 'both'"
+                           required="type == 'sale' and sale_criteria_type == 'both'"/>
+
+                    <field name="margin_operator"
+                           invisible="type != 'sale' or sale_criteria_type == 'amount'"
+                           required="type == 'sale' and sale_criteria_type != 'amount'"/>
+                    <field name="margin_value"
+                           invisible="type != 'sale' or sale_criteria_type == 'amount'"
+                           required="type == 'sale' and sale_criteria_type != 'amount'"/>
+
+                    <!-- Waiver Mechanism: Purchase steps only -->
+                    <field name="waiver_mechanism" readonly="type != 'purchase'" invisible="type != 'purchase'"/>
+
+                    <!-- Exactly what this step evaluates, spelled out, so a
+                         step that can never match is obvious at a glance. -->
+                    <field name="condition_display" string="Evaluates As"/>
+
+                    <field name="currency_id" column_invisible="1"/>
+                    <field name="company_id" groups="base.group_multi_company" column_invisible="1"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="action_view_approval_steps" model="ir.actions.act_window">
+            <field name="name">Approval Steps</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">approval.steps</field>
+            <field name="view_mode">list</field>
+            <field name="view_id" ref="view_approval_steps_tree"/>
+            <field name="context">{}</field>
+        </record>
+
+        <menuitem name="Approval Management"
+                  id="menu_approval_management"
+                  parent="base.menu_custom"
+                  sequence="20"/>
+
+        <menuitem name="Approval Steps"
+                  id="menu_approval_steps"
+                  parent="menu_approval_management"
+                  action="action_view_approval_steps"/>
+    </data>
+</odoo>

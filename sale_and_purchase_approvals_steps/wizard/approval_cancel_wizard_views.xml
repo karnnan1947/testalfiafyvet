@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="approval_cancel_wizard_view_form" model="ir.ui.view">
+        <field name="name">approval.cancel.wizard.view.form</field>
+        <field name="model">approval.cancel.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cancel Request">
+                <field name="res_model" invisible="1"/>
+                <field name="res_id" invisible="1"/>
+                <field name="is_approver" invisible="1"/>
+
+                <!-- An approver refusing the request... -->
+                <div class="alert alert-warning" role="alert"
+                     invisible="not is_approver">
+                    You are rejecting
+                    <field name="record_name" readonly="1" nolabel="1"
+                           class="oe_inline fw-bold"/>.
+                    The reason below is recorded on the document and sent to
+                    whoever raised it.
+                </div>
+                <!-- ...versus the requester pulling their own request back. -->
+                <div class="alert alert-info" role="alert"
+                     invisible="is_approver">
+                    You are withdrawing your own request
+                    <field name="record_name" readonly="1" nolabel="1"
+                           class="oe_inline fw-bold"/>.
+                    The reason below is recorded on the document, and the
+                    approver waiting on it will be told it is no longer needed.
+                </div>
+
+                <group>
+                    <field name="reason" nolabel="1" required="1"
+                           placeholder="Explain why..."/>
+                </group>
+                <footer>
+                    <button name="action_confirm_cancel" type="object"
+                            string="Reject Request" class="btn-danger"
+                            invisible="not is_approver"/>
+                    <button name="action_confirm_cancel" type="object"
+                            string="Withdraw Request" class="btn-danger"
+                            invisible="is_approver"/>
+                    <button string="Discard" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

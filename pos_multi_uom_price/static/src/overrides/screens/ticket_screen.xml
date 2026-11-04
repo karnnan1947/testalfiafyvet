@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="pos_multi_uom_price.TicketScreen" t-inherit="point_of_sale.TicketScreen" t-inherit-mode="extension">
+        <!-- pieces chosen with "Return Units" are shown as pieces, not as 0.17 pack -->
+        <xpath expr="//Orderline[@line='line']" position="attributes">
+            <attribute name="toRefund">line.order_id?.uiState?.lineToRefund?.[line.uuid]?.alfPieceQty ? undefined : qty</attribute>
+        </xpath>
+        <xpath expr="//Orderline[@line='line']/li[hasclass('refund-note')]" position="attributes">
+            <attribute name="t-if">!this.pos.isProductQtyZero(line.refundedQty) and !this.alfRefundedPieces(line)</attribute>
+        </xpath>
+        <xpath expr="//Orderline[@line='line']/li[hasclass('refund-note')]" position="after">
+            <li t-if="this.alfRefundedPieces(line)" class="info refund-note mt-1">
+                <strong t-out="this.pos.formatProductQty(this.alfRefundedPieces(line), false)"/>
+                <span> <t t-out="line.product_id.uom_id.name"/> refunded</span>
+            </li>
+            <li t-if="toRefundDetail?.alfPieceQty and !toRefundDetail.destination_order_uuid" class="info o_return_pieces_note mt-1 text-primary">
+                <strong>Return <t t-out="this.pos.formatProductQty(toRefundDetail.alfPieceQty, false)"/> <t t-out="line.product_id.uom_id.name"/></strong>
+                <span> at <t t-out="this.pos.formatCurrency(this.alfPiecePrice(line))"/> each</span>
+            </li>
+        </xpath>
+        <xpath expr="//div[hasclass('control-buttons')]" position="inside">
+            <button t-if="this.alfCanReturnPieces()"
+                    class="o_return_pieces_button control-button btn btn-secondary btn-lg lh-lg flex-grow-1 flex-shrink-1"
+                    t-on-click="() => this.onClickReturnPieces()">
+                <i class="oi me-1" data-icon="shopping_basket"/>
+                <t t-out="this.alfReturnPiecesLabel()"/>
+            </button>
+        </xpath>
+    </t>
+</templates>

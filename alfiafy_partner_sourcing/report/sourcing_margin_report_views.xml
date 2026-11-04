@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sourcing_margin_report_view_pivot" model="ir.ui.view">
+        <field name="name">alfiafy.sourcing.margin.report.pivot</field>
+        <field name="model">alfiafy.sourcing.margin.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Sourcing Margin Analysis" sample="1">
+                <field name="product_id" type="row"/>
+                <field name="sourcing_type" type="col"/>
+                <field name="qty_invoiced" type="measure"/>
+                <field name="price_subtotal" type="measure"/>
+                <field name="cogs_amount" type="measure"/>
+                <field name="gross_profit" type="measure"/>
+                <field name="margin_percent" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="sourcing_margin_report_view_graph" model="ir.ui.view">
+        <field name="name">alfiafy.sourcing.margin.report.graph</field>
+        <field name="model">alfiafy.sourcing.margin.report</field>
+        <field name="arch" type="xml">
+            <graph string="Gross Profit by Sourcing" type="bar" sample="1">
+                <field name="sourcing_type"/>
+                <field name="gross_profit" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="sourcing_margin_report_view_list" model="ir.ui.view">
+        <field name="name">alfiafy.sourcing.margin.report.list</field>
+        <field name="model">alfiafy.sourcing.margin.report</field>
+        <field name="arch" type="xml">
+            <list string="Sourcing Margin Analysis" create="0" edit="0" delete="0">
+                <field name="invoice_date"/>
+                <field name="origin" optional="show"/>
+                <field name="move_id" optional="show"/>
+                <field name="pos_order_id" optional="show"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="categ_id" optional="hide"/>
+                <field name="sourcing_type" widget="badge"
+                       decoration-success="sourcing_type == 'partner'"
+                       decoration-warning="sourcing_type == 'outside'"
+                       decoration-info="sourcing_type == 'mixed'"/>
+                <field name="qty_invoiced" sum="Total"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="price_subtotal" sum="Total"/>
+                <field name="cogs_amount" sum="Total"/>
+                <field name="gross_profit" sum="Total"/>
+                <field name="margin_percent" avg="Average"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="sourcing_margin_report_view_search" model="ir.ui.view">
+        <field name="name">alfiafy.sourcing.margin.report.search</field>
+        <field name="model">alfiafy.sourcing.margin.report</field>
+        <field name="arch" type="xml">
+            <search string="Sourcing Margin Analysis">
+                <field name="product_id"/>
+                <field name="partner_id"/>
+                <field name="categ_id"/>
+                <filter string="Official Partner" name="partner" domain="[('sourcing_type', '=', 'partner')]"/>
+                <filter string="Outside Supplier" name="outside" domain="[('sourcing_type', '=', 'outside')]"/>
+                <filter string="Mixed" name="mixed" domain="[('sourcing_type', '=', 'mixed')]"/>
+                <filter string="No Sourcing" name="no_sourcing" domain="[('sourcing_type', '=', False)]"/>
+                <separator/>
+                <filter string="Invoices" name="invoices" domain="[('origin', '=', 'invoice')]"/>
+                <filter string="POS Orders" name="pos" domain="[('origin', '=', 'pos')]"/>
+                <separator/>
+                <filter string="Date" name="filter_invoice_date" date="invoice_date"/>
+                <group>
+                    <filter string="Sourcing" name="group_sourcing" context="{'group_by': 'sourcing_type'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Product Category" name="group_categ" context="{'group_by': 'categ_id'}"/>
+                    <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Document Type" name="group_origin" context="{'group_by': 'origin'}"/>
+                    <filter string="Month" name="group_month" context="{'group_by': 'invoice_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_sourcing_margin_report" model="ir.actions.act_window">
+        <field name="name">Sourcing Margin Analysis</field>
+        <field name="res_model">alfiafy.sourcing.margin.report</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="search_view_id" ref="sourcing_margin_report_view_search"/>
+        <field name="context">{'search_default_filter_invoice_date': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No sales to analyse yet</p>
+            <p>Revenue, cost of goods sold and margin of the products sold, split
+               between lots bought from Official Partners and from Outside suppliers.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_sourcing_margin_report"
+              name="Sourcing Margin Analysis"
+              parent="account.menu_finance_reports"
+              action="action_sourcing_margin_report"
+              groups="account.group_account_invoice,account.group_account_manager"
+              sequence="6"/>
+</odoo>

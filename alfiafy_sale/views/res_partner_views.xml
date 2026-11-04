@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_property_form_alfiafy_sale" model="ir.ui.view">
+        <field name="name">res.partner.property.form.alfiafy.sale</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="account.view_partner_property_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='credit_limits']" position="after">
+                <group string="Credit Hold" name="alfiafy_credit_hold">
+                    <field name="block_on_overdue"/>
+                    <div class="text-muted" colspan="2">
+                        Sales orders cannot be confirmed (and Customer Account payments are
+                        refused in the POS) while this customer has an unpaid invoice past
+                        its due date.
+                    </div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

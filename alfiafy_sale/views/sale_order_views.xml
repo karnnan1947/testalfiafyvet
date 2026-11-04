@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_alfiafy_sale" model="ir.ui.view">
+        <field name="name">sale.order.form.alfiafy.sale</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Credit hold banner (credit limit exceeded / overdue invoices) -->
+            <xpath expr="//header" position="after">
+                <div class="alert alert-danger" role="alert" invisible="not credit_warning_banner">
+                    <field name="credit_warning_banner" nolabel="1"/>
+                </div>
+            </xpath>
+
+            <!-- The banner above already states the credit limit problem. -->
+            <xpath expr="//div[field[@name='partner_credit_warning']]" position="attributes">
+                <attribute name="invisible">partner_credit_warning == '' or credit_warning_banner</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='order_line']/list//column[@name='sol_qty']" position="after">
+                <field name="alfiafy_is_storable" column_invisible="1"/>
+                <field name="is_out_of_stock" column_invisible="1"/>
+                <field name="warehouse_free_qty"
+                       optional="show"
+                       invisible="display_type or not alfiafy_is_storable"
+                       class="fw-bold"
+                       decoration-danger="is_out_of_stock"
+                       decoration-warning="not is_out_of_stock and warehouse_free_qty &lt; product_uom_qty"
+                       decoration-success="not is_out_of_stock and warehouse_free_qty &gt;= product_uom_qty"/>
+            </xpath>
+
+            <xpath expr="//field[@name='order_line']/list//column[@name='price_unit']" position="after">
+                <field name="last_customer_price_str" string="Last Price" optional="show"
+                       invisible="display_type or not product_id"/>
+                <button name="action_view_price_history" type="object" icon="fa-history"
+                        title="Customer price history"
+                        invisible="display_type or not product_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

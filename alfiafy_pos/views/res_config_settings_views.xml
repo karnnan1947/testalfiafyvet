@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_alfiafy_pos" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.alfiafy.pos</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="point_of_sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='pos_pricing_section']" position="after">
+                <block title="Pharmacy Counter Controls" id="alfiafy_pos_controls_section">
+                    <setting id="alfiafy_pos_discount_limit" string="Discount Approval"
+                             help="Discounts are percentage only. Above the cashier limit a manager must enter their PIN; the manager is recorded on the order line.">
+                        <field name="pos_require_manager_discount_pin"/>
+                        <div class="content-group mt8" invisible="not pos_require_manager_discount_pin">
+                            <div class="row">
+                                <label for="pos_max_cashier_discount" string="Cashier limit" class="col-lg-4 o_light_label"/>
+                                <div class="col-lg-8">
+                                    <field name="pos_max_cashier_discount" class="oe_inline"/> %
+                                </div>
+                            </div>
+                        </div>
+                    </setting>
+                    <setting id="alfiafy_pos_phone" string="Customer Phone Required"
+                             help="An order can only be validated for a customer with a phone number.">
+                        <field name="pos_enforce_pos_phone"/>
+                    </setting>
+                    <setting id="alfiafy_pos_stock" string="Block Out-of-Stock Sales"
+                             help="Products cannot be sold beyond the free quantity of the branch stock location (Operation Type of the register).">
+                        <field name="pos_block_out_of_stock_pos"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

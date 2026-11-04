@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_pos_branch_performance_dashboard"
+              name="Branch Performance Dashboard"
+              parent="point_of_sale.menu_point_rep"
+              action="action_pos_branch_target"
+              sequence="1"/>
+</odoo>

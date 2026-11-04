@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit POS Order Form View to hide cost and margin -->
+        <record id="pos_order_form_view_inherit" model="ir.ui.view">
+            <field name="name">pos.order.form.inherit.hide.cost.margin</field>
+            <field name="model">pos.order</field>
+            <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+            <field name="arch" type="xml">
+                <!-- Restrict order lines list columns -->
+                <xpath expr="//field[@name='lines']/list/field[@name='total_cost']" position="attributes">
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='lines']/list/field[@name='margin']" position="attributes">
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='lines']/list/field[@name='margin_percent']" position="attributes">
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+
+                <!-- Restrict bottom summary margin label and div -->
+                <xpath expr="//group[@name='order_total']/label[@for='margin']" position="attributes">
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+                <xpath expr="//group[@name='order_total']/div[field[@name='margin']]" position="attributes">
+                    <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="material_purchase_requisition_view_list" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.list</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="arch" type="xml">
+            <list string="Material Requisitions" sample="1"
+                  decoration-muted="state == 'cancel'"
+                  decoration-info="state == 'to_approve'">
+                <field name="name" decoration-bf="1"/>
+                <field name="request_date"/>
+                <field name="requested_by_id" widget="many2one_avatar_user"/>
+                <field name="warehouse_id"/>
+                <field name="vendor_id" optional="show"/>
+                <field name="required_date" optional="show"/>
+                <field name="purchase_count" string="RFQs" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'to_approve'"
+                       decoration-success="state in ('approved', 'done')"
+                       decoration-muted="state == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="material_purchase_requisition_view_form" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.form</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="arch" type="xml">
+            <form string="Material Requisition">
+                <header>
+                    <button name="action_submit" string="Submit for Approval" type="object"
+                            class="oe_highlight" invisible="state != 'draft'" data-hotkey="s"/>
+                    <button name="action_approve" string="Approve" type="object"
+                            class="oe_highlight" invisible="state != 'to_approve'"
+                            groups="purchase.group_purchase_manager" data-hotkey="a"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            invisible="state != 'to_approve'"
+                            groups="purchase.group_purchase_manager"/>
+                    <button name="action_create_purchase_order" string="Create Local RFQ" type="object"
+                            class="oe_highlight" invisible="state != 'approved'" data-hotkey="r"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state not in ('draft', 'approved')"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object"
+                            invisible="state != 'cancel'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,to_approve,approved,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_purchase_orders" type="object" class="oe_stat_button"
+                                icon="fa-shopping-cart" invisible="purchase_count == 0">
+                            <field name="purchase_count" widget="statinfo" string="RFQs"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="requested_by_id" widget="many2one_avatar_user"
+                                   readonly="state != 'draft'"/>
+                            <field name="warehouse_id" options="{'no_create': True}"
+                                   readonly="state not in ('draft', 'to_approve')"/>
+                            <field name="vendor_id"
+                                   context="{'res_partner_search_mode': 'supplier'}"
+                                   readonly="state in ('done', 'cancel')"/>
+                        </group>
+                        <group>
+                            <field name="request_date" readonly="state != 'draft'"/>
+                            <field name="required_date" readonly="state in ('done', 'cancel')"/>
+                            <field name="approved_by_id" invisible="not approved_by_id"/>
+                            <field name="approved_date" invisible="not approved_date"/>
+                            <field name="company_id" groups="base.group_multi_company"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Products" name="products">
+                            <field name="line_ids" readonly="state not in ('draft', 'to_approve', 'approved')">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id" context="{'default_purchase_ok': True}"/>
+                                    <field name="description" optional="show"/>
+                                    <field name="qty_available" string="On Hand" optional="show"/>
+                                    <field name="product_qty"/>
+                                    <field name="uom_id" groups="uom.group_uom" options="{'no_create': True}"/>
+                                    <field name="vendor_id" optional="show"
+                                           context="{'res_partner_search_mode': 'supplier'}"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Purpose / Notes" name="purpose">
+                            <field name="purpose" placeholder="Why is this needed? e.g. branch replenishment, sample or information request..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="material_purchase_requisition_view_search" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.search</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="arch" type="xml">
+            <search string="Material Requisitions">
+                <field name="name"/>
+                <field name="requested_by_id"/>
+                <field name="warehouse_id"/>
+                <field name="line_ids" string="Product" filter_domain="[('line_ids.product_id', 'ilike', self)]"/>
+                <filter string="My Requisitions" name="my_requisitions" domain="[('requested_by_id', '=', uid)]"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Waiting Approval" name="to_approve" domain="[('state', '=', 'to_approve')]"/>
+                <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Done" name="done" domain="[('state', '=', 'done')]"/>
+                <group>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Branch / Warehouse" name="group_warehouse" context="{'group_by': 'warehouse_id'}"/>
+                    <filter string="Requested By" name="group_requested_by" context="{'group_by': 'requested_by_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="material_purchase_requisition_action" model="ir.actions.act_window">
+        <field name="name">Material Requisitions</field>
+        <field name="res_model">material.purchase.requisition</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="material_purchase_requisition_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Raise a material requisition</p>
+            <p>Branches and departments request products here. Once approved,
+               the requisition generates draft Local Purchase RFQs.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_alfiafy_requisitions_root"
+              name="Requisitions"
+              parent="purchase.menu_purchase_root"
+              sequence="5"/>
+    <menuitem id="menu_material_purchase_requisition"
+              name="Material Requisitions"
+              parent="menu_alfiafy_requisitions_root"
+              action="material_purchase_requisition_action"
+              sequence="10"/>
+</odoo>

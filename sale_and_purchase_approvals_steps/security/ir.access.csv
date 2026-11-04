@@ -1,0 +1,6 @@
+id,name,model_id,group_id/id,operation,domain
+access_approval_steps,approval.steps,approval.steps,base.group_user,r,
+access_approval_steps_manager,approval.steps.manager,approval.steps,base.group_system,crud,
+approval_steps_company_rule,Approval Steps Multi Company,approval.steps,,crud,"[('company_id', 'in', company_ids)]"
+access_purchase_waiver_wizard,purchase.waiver.wizard,purchase.waiver.wizard,base.group_user,crud,
+access_approval_cancel_wizard,approval.cancel.wizard,approval.cancel.wizard,base.group_user,crud,

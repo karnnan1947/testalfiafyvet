@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_production_lot_form_partner_sourcing" model="ir.ui.view">
+        <field name="name">stock.lot.form.alfiafy.partner.sourcing</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <!-- shown (and editable) in the traceability group below instead -->
+            <xpath expr="//group[@name='main_group']//field[@name='sourcing_type']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//group[@name='main_group']" position="after">
+                <group name="alfiafy_sourcing" string="Sourcing &amp; Procurement Traceability">
+                    <group>
+                        <field name="sourcing_type" widget="radio" options="{'horizontal': True}"/>
+                        <field name="origin_vendor_id" invisible="not origin_vendor_id"/>
+                    </group>
+                    <group>
+                        <field name="origin_po_id" invisible="not origin_po_id"/>
+                        <field name="origin_currency_id" invisible="1"/>
+                        <field name="origin_unit_cost" invisible="not origin_po_id"
+                               groups="purchase.group_purchase_user,account.group_account_invoice"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_production_lot_tree_partner_sourcing" model="ir.ui.view">
+        <field name="name">stock.lot.list.alfiafy.partner.sourcing</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="origin_vendor_id" optional="hide"/>
+                <field name="origin_po_id" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

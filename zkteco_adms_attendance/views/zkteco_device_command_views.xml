@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- List                                                          -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_device_command_list" model="ir.ui.view">
+        <field name="name">zkteco.device.command.list</field>
+        <field name="model">zkteco.device.command</field>
+        <field name="arch" type="xml">
+            <list string="Device Commands"
+                  decoration-muted="state == 'done'"
+                  decoration-warning="state == 'pending'"
+                  decoration-info="state == 'sent'"
+                  decoration-danger="state == 'error'">
+                <field name="create_date" string="Queued"/>
+                <field name="device_id"/>
+                <field name="command_type"/>
+                <field name="command_text"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'done'"
+                       decoration-danger="state == 'error'"
+                       decoration-info="state == 'sent'"
+                       decoration-warning="state == 'pending'"/>
+                <field name="sent_date" optional="show"/>
+                <field name="ack_date" optional="show"/>
+                <field name="return_code" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Form                                                          -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_device_command_form" model="ir.ui.view">
+        <field name="name">zkteco.device.command.form</field>
+        <field name="model">zkteco.device.command</field>
+        <field name="arch" type="xml">
+            <form string="Device Command">
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,sent,done,error"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Command">
+                            <field name="device_id"/>
+                            <field name="command_type"/>
+                            <field name="command_text"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Result">
+                            <field name="sent_date" readonly="1"/>
+                            <field name="ack_date" readonly="1"/>
+                            <field name="return_code" readonly="1"/>
+                            <field name="response" readonly="1"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info mt-3" role="status" name="command_help">
+                        <h4 class="alert-heading" role="status">
+                            <i class="fa fa-terminal me-1" title="Commands"/>Command reference
+                        </h4>
+                        <p>
+                            Pick a <b>Command Type</b> and the <b>Command Text</b> is filled in
+                            automatically (you can still edit it before saving). The device runs
+                            the command the next time it polls Odoo — usually within a minute.
+                        </p>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-2">
+                                <thead>
+                                    <tr>
+                                        <th>Command Type</th>
+                                        <th>Command Text</th>
+                                        <th>What it does / when to use</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Query Info</td>
+                                        <td><code>INFO</code></td>
+                                        <td>Device reports firmware, capacity and user/record counts.
+                                            Use it to read the firmware version or check the device is
+                                            healthy. Results appear on the device's <b>Device Info</b> tab.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Reboot</td>
+                                        <td><code>REBOOT</code></td>
+                                        <td>Restarts the terminal remotely. Use when it is frozen or
+                                            to apply new settings without visiting the device.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sync Time</td>
+                                        <td><i>usually automatic</i></td>
+                                        <td>The device clock normally syncs from the server on each
+                                            handshake. Use <b>Query Info</b> to verify the time; only
+                                            send a manual time command if your firmware requires it.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sync Users</td>
+                                        <td><code>DATA QUERY USERINFO</code></td>
+                                        <td>Reads/refreshes the user records on the device. Note: face
+                                            and fingerprint templates must still be enrolled physically
+                                            on the terminal.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Clear Attendance Data</td>
+                                        <td><code>CLEAR LOG</code></td>
+                                        <td><b>Destructive.</b> Deletes the punch log stored ON the
+                                            device. Only use after the data is safely in Odoo, to free
+                                            device memory.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Unlock Door</td>
+                                        <td><code>AC_UNLOCK</code></td>
+                                        <td>Fires the door relay to open the door — only for
+                                            access-control setups where the terminal controls a lock.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Set Options</td>
+                                        <td><code>SET OPTION Realtime=1,TransInterval=1,Delay=30</code></td>
+                                        <td>Changes device configuration: real-time push
+                                            (<code>Realtime=1</code>), upload interval in minutes
+                                            (<code>TransInterval</code>), heartbeat in seconds
+                                            (<code>Delay</code>).</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Custom</td>
+                                        <td><i>your own text</i></td>
+                                        <td>Send any raw ADMS command not covered above (advanced).</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="mb-0">
+                            <b>Result:</b> after the device runs it, <b>Return Code</b>
+                            <code>0</code> means success and <b>Ack Date</b> is filled in;
+                            a non-zero code shows as <b>Error</b>.
+                        </p>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Search                                                        -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_device_command_search" model="ir.ui.view">
+        <field name="name">zkteco.device.command.search</field>
+        <field name="model">zkteco.device.command</field>
+        <field name="arch" type="xml">
+            <search string="Device Commands">
+                <field name="device_id"/>
+                <field name="command_text"/>
+                <filter name="filter_pending" string="Pending"
+                        domain="[('state', '=', 'pending')]"/>
+                <filter name="filter_sent" string="Sent"
+                        domain="[('state', '=', 'sent')]"/>
+                <filter name="filter_done" string="Done"
+                        domain="[('state', '=', 'done')]"/>
+                <filter name="filter_error" string="Error"
+                        domain="[('state', '=', 'error')]"/>
+                <group>
+                    <filter name="group_device" string="Device"
+                            context="{'group_by': 'device_id'}"/>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_type" string="Command Type"
+                            context="{'group_by': 'command_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Action                                                        -->
+    <!-- ============================================================= -->
+    <record id="action_zkteco_device_command" model="ir.actions.act_window">
+        <field name="name">Device Commands</field>
+        <field name="res_model">zkteco.device.command</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_zkteco_device_command_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No device commands queued yet
+            </p>
+            <p>
+                Commands queued here (reboot, sync time, set options...) are delivered
+                to the terminal the next time it polls the command queue.
+            </p>
+        </field>
+    </record>
+
+</odoo>

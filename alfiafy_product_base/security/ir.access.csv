@@ -1,0 +1,4 @@
+id,name,model_id,group_id/id,operation,domain
+access_alfiafy_target_species_user,alfiafy.target.species user,alfiafy.target.species,base.group_user,r,
+access_alfiafy_target_species_manager,alfiafy.target.species manager,alfiafy.target.species,product.group_product_manager,crud,
+access_alfiafy_target_species_stock_manager,alfiafy.target.species stock manager,alfiafy.target.species,stock.group_stock_manager,crud,

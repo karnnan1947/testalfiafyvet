@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="group_approval" model="res.groups">
+        <field name="name">Approval</field>
+    </record>
+    <!-- Odoo 20: the multi-company record rule now lives in
+         security/ir.access.csv (ir.rule was merged into ir.access). -->
+</odoo>

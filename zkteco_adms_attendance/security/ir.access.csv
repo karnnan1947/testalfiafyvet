@@ -1,0 +1,21 @@
+id,name,model_id,group_id/id,operation,domain
+access_zkteco_biometric_device_admin,zkteco.biometric.device admin,zkteco.biometric.device,group_zkteco_admin,crud,
+access_zkteco_biometric_attendance_log_admin,zkteco.biometric.attendance.log admin,zkteco.biometric.attendance.log,group_zkteco_admin,crud,
+access_zkteco_device_command_admin,zkteco.device.command admin,zkteco.device.command,group_zkteco_admin,crud,
+access_hr_attendance_policy_admin,hr.attendance.policy admin,hr.attendance.policy,group_zkteco_admin,crud,
+access_zkteco_employee_policy_line_admin,zkteco.employee.policy.line admin,zkteco.employee.policy.line,group_zkteco_admin,crud,
+access_zkteco_attendance_reprocess_wizard_admin,zkteco.attendance.reprocess.wizard admin,zkteco.attendance.reprocess.wizard,group_zkteco_admin,crud,
+access_zkteco_biometric_device_user,zkteco.biometric.device user,zkteco.biometric.device,group_zkteco_user,r,
+access_zkteco_biometric_attendance_log_user,zkteco.biometric.attendance.log user,zkteco.biometric.attendance.log,group_zkteco_user,r,
+access_zkteco_device_command_user,zkteco.device.command user,zkteco.device.command,group_zkteco_user,r,
+access_hr_attendance_policy_user,hr.attendance.policy user,hr.attendance.policy,group_zkteco_user,r,
+access_zkteco_employee_policy_line_user,zkteco.employee.policy.line user,zkteco.employee.policy.line,group_zkteco_user,r,
+access_zkteco_biometric_device_officer,zkteco.biometric.device officer,zkteco.biometric.device,hr_attendance.group_hr_attendance_officer,r,
+access_zkteco_biometric_attendance_log_officer,zkteco.biometric.attendance.log officer,zkteco.biometric.attendance.log,hr_attendance.group_hr_attendance_officer,r,
+access_hr_attendance_policy_officer,hr.attendance.policy officer,hr.attendance.policy,hr_attendance.group_hr_attendance_officer,r,
+access_zkteco_employee_policy_line_officer,zkteco.employee.policy.line officer,zkteco.employee.policy.line,hr_attendance.group_hr_attendance_officer,crud,
+rule_zkteco_biometric_device_company,ZKTeco Biometric Device: multi-company,zkteco.biometric.device,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+rule_zkteco_biometric_attendance_log_company,ZKTeco Attendance Log: multi-company,zkteco.biometric.attendance.log,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+rule_zkteco_device_command_company,ZKTeco Device Command: multi-company,zkteco.device.command,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+rule_hr_attendance_policy_company,Attendance Policy: multi-company,hr.attendance.policy,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+rule_zkteco_employee_policy_line_company,Employee Policy Assignment: multi-company,zkteco.employee.policy.line,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"

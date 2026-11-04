@@ -1,0 +1,6 @@
+id,name,model_id,group_id/id,operation,domain
+access_material_purchase_requisition_user,material.purchase.requisition user,material.purchase.requisition,purchase.group_purchase_user,cru,
+access_material_purchase_requisition_manager,material.purchase.requisition manager,material.purchase.requisition,purchase.group_purchase_manager,crud,
+access_material_purchase_requisition_line_user,material.purchase.requisition.line user,material.purchase.requisition.line,purchase.group_purchase_user,crud,
+material_purchase_requisition_comp_rule,Material Requisition multi-company,material.purchase.requisition,,crud,"[('company_id', 'in', company_ids)]"
+access_purchase_price_history_wizard,purchase.price.history.wizard,purchase.price.history.wizard,purchase.group_purchase_user,crud,

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="purchase_order_form_partner_sourcing" model="ir.ui.view">
+        <field name="name">purchase.order.form.alfiafy.partner.sourcing</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- sourcing badge in the header, next to the order number -->
+            <xpath expr="//div[hasclass('oe_title')]/h1" position="inside">
+                <field name="sourcing_type" widget="badge" readonly="1"
+                       class="fs-6 ms-2"
+                       decoration-success="sourcing_type == 'partner'"
+                       decoration-warning="sourcing_type == 'outside'"
+                       invisible="not sourcing_type"/>
+            </xpath>
+            <!-- line sourcing: follows the order, can be changed per line -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="before">
+                <field name="sourcing_type" widget="badge" optional="show"
+                       decoration-success="sourcing_type == 'partner'"
+                       decoration-warning="sourcing_type == 'outside'"
+                       invisible="display_type"
+                       readonly="parent.state not in ('draft', 'sent')"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_multi_uom_price" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.pos.multi.uom.price</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="point_of_sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//setting[@id='pos_uom_price_option_setting']" position="after">
+                <setting id="pos_block_fractional_return" string="Block Fractional Returns"
+                         help="A line sold per pack / box can only be returned in whole packs. When off, the cashier can return single pieces of a pack (Orders screen, &quot;Return Units&quot;), refunded at the price paid per piece.">
+                    <field name="pos_block_fractional_return"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>

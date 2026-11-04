@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- BRD 1.2 customization #1: any quotation with a discount needs
+         management approval. The approver defaults to the administrator;
+         change the user or add more approvers in
+         Settings > Technical > Approval Steps. -->
+    <data noupdate="1">
+        <record id="approval_step_sale_discount" model="approval.steps">
+            <field name="type">sale</field>
+            <field name="sequence">10</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="sale_criteria_type">discount</field>
+        </record>
+    </data>
+</odoo>

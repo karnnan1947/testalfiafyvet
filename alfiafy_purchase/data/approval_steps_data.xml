@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- BRD 1.4 #1: EVERY purchase order needs approval, no amount threshold.
+         "Amount >= 0" matches all orders. The approver defaults to the
+         administrator; add the accountant (and/or replace the user) at the
+         same sequence 10 in Settings > Technical > Approval Steps; either
+         approver at the same sequence may approve. -->
+    <data noupdate="1">
+        <record id="approval_step_all_purchase_orders" model="approval.steps">
+            <field name="type">purchase</field>
+            <field name="sequence">10</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="amount_operator">&gt;=</field>
+            <field name="amount_value">0</field>
+            <field name="amount_base">total</field>
+        </record>
+    </data>
+</odoo>

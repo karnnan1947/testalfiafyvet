@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================
+         Purchase order form
+         ================================================================ -->
+    <record id="purchase_order_form_alfiafy" model="ir.ui.view">
+        <field name="name">purchase.order.form.alfiafy.purchase</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- smart button back to the material requisition -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_requisition" type="object" class="oe_stat_button"
+                        icon="fa-clipboard" invisible="not material_requisition_id">
+                    <field name="material_requisition_id" widget="statinfo" string="Requisition"/>
+                </button>
+            </xpath>
+
+            <!-- classification, pulled from the vendor -->
+            <xpath expr="//field[@name='partner_ref']" position="after">
+                <field name="purchase_type" widget="radio" options="{'horizontal': True}"
+                       readonly="state in ('purchase', 'cancel')"/>
+                <field name="sourcing_type" widget="radio" options="{'horizontal': True}"
+                       required="state in ('draft', 'sent')"
+                       readonly="state in ('purchase', 'cancel')"/>
+            </xpath>
+
+            <!-- order lines: last price, trend and the history popup -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="after">
+                <field name="last_purchase_price" string="Last Price" optional="show"
+                       invisible="display_type or not last_purchase_date"/>
+                <field name="last_purchase_date" column_invisible="True"/>
+                <field name="price_trend" widget="badge" optional="show" width="115px"
+                       decoration-danger="price_trend == 'up'"
+                       decoration-success="price_trend == 'down'"
+                       decoration-info="price_trend == 'same'"
+                       invisible="display_type"/>
+                <button name="action_open_price_history" type="object" icon="fa-history"
+                        title="Price History" aria-label="Price History"
+                        invisible="display_type or not product_id"/>
+            </xpath>
+
+            <!-- Import Tracking tab, only for import shipments -->
+            <xpath expr="//page[@name='purchase_delivery_invoice']" position="before">
+                <page string="Import Tracking" name="alfiafy_import_tracking"
+                      invisible="purchase_type != 'import'">
+                    <group>
+                        <group string="Shipment">
+                            <field name="shipment_status"/>
+                            <field name="shipping_line"/>
+                            <field name="container_no"/>
+                            <field name="bl_awb_no"/>
+                            <field name="tracking_no"/>
+                        </group>
+                        <group string="Schedule">
+                            <field name="port_of_entry"/>
+                            <field name="etd"/>
+                            <field name="eta"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         List badges: RFQ list, Purchase Orders list, generic list
+         ================================================================ -->
+    <record id="purchase_order_kpis_tree_alfiafy" model="ir.ui.view">
+        <field name="name">purchase.order.kpis.list.alfiafy.purchase</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="purchase_type" widget="badge" optional="show"
+                       decoration-info="purchase_type == 'local'"
+                       decoration-primary="purchase_type == 'import'"/>
+                <field name="sourcing_type" widget="badge" optional="show"
+                       decoration-success="sourcing_type == 'partner'"
+                       decoration-warning="sourcing_type == 'outside'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="purchase_order_view_tree_alfiafy" model="ir.ui.view">
+        <field name="name">purchase.order.view.list.alfiafy.purchase</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="purchase_type" widget="badge" optional="show"
+                       decoration-info="purchase_type == 'local'"
+                       decoration-primary="purchase_type == 'import'"/>
+                <field name="sourcing_type" widget="badge" optional="show"
+                       decoration-success="sourcing_type == 'partner'"
+                       decoration-warning="sourcing_type == 'outside'"/>
+                <field name="eta" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="purchase_order_tree_alfiafy" model="ir.ui.view">
+        <field name="name">purchase.order.list.alfiafy.purchase</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="purchase_type" widget="badge" optional="show"
+                       decoration-info="purchase_type == 'local'"
+                       decoration-primary="purchase_type == 'import'"/>
+                <field name="sourcing_type" widget="badge" optional="show"
+                       decoration-success="sourcing_type == 'partner'"
+                       decoration-warning="sourcing_type == 'outside'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         Search: filters and group-by on type / sourcing / shipment
+         ================================================================ -->
+    <record id="purchase_order_view_search_alfiafy" model="ir.ui.view">
+        <field name="name">purchase.order.search.alfiafy.purchase</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="container_no"/>
+                <field name="bl_awb_no"/>
+                <separator/>
+                <filter string="Local Purchases" name="filter_local" domain="[('purchase_type', '=', 'local')]"/>
+                <filter string="Import Shipments" name="filter_import" domain="[('purchase_type', '=', 'import')]"/>
+                <separator/>
+                <filter string="Official Partner" name="filter_sourcing_partner" domain="[('sourcing_type', '=', 'partner')]"/>
+                <filter string="Outside Supplier" name="filter_sourcing_outside" domain="[('sourcing_type', '=', 'outside')]"/>
+            </xpath>
+            <xpath expr="//filter[@name='vendor']" position="after">
+                <filter string="Purchase Type" name="group_purchase_type" context="{'group_by': 'purchase_type'}"/>
+                <filter string="Sourcing" name="group_sourcing_type" context="{'group_by': 'sourcing_type'}"/>
+                <filter string="Shipment Status" name="group_shipment_status" context="{'group_by': 'shipment_status'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_purchase_order_filter_alfiafy" model="ir.ui.view">
+        <field name="name">purchase.order.filter.alfiafy.purchase</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="container_no"/>
+                <field name="bl_awb_no"/>
+                <separator/>
+                <filter string="Local Purchases" name="filter_local" domain="[('purchase_type', '=', 'local')]"/>
+                <filter string="Import Shipments" name="filter_import" domain="[('purchase_type', '=', 'import')]"/>
+                <separator/>
+                <filter string="Official Partner" name="filter_sourcing_partner" domain="[('sourcing_type', '=', 'partner')]"/>
+                <filter string="Outside Supplier" name="filter_sourcing_outside" domain="[('sourcing_type', '=', 'outside')]"/>
+            </xpath>
+            <xpath expr="//filter[@name='vendor']" position="after">
+                <filter string="Purchase Type" name="group_purchase_type" context="{'group_by': 'purchase_type'}"/>
+                <filter string="Sourcing" name="group_sourcing_type" context="{'group_by': 'sourcing_type'}"/>
+                <filter string="Shipment Status" name="group_shipment_status" context="{'group_by': 'shipment_status'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

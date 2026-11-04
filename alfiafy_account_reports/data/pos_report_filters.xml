@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Point of Sale > Reporting > Orders: quantity sold per product (BRD 1.7 #3).
+         The graph is sorted by the saved order; in the pivot, click the
+         "Product Quantity" header to sort. Add a Point of Sale / date filter
+         to review one branch and period. -->
+    <record id="filter_pos_fast_moving_items" model="ir.filters">
+        <field name="name">Fast-Moving Items</field>
+        <field name="model_id">report.pos.order</field>
+        <field name="action_id" ref="point_of_sale.action_report_pos_order_all"/>
+        <field name="user_ids" eval="False"/>
+        <field name="domain">[('state', '!=', 'cancel')]</field>
+        <field name="context">{'group_by': ['product_id'], 'graph_measure': 'product_qty', 'graph_mode': 'bar', 'graph_groupbys': ['product_id'], 'graph_order': 'DESC', 'pivot_measures': ['product_qty'], 'pivot_row_groupby': ['product_id'], 'pivot_column_groupby': []}</field>
+        <field name="sort">["product_qty desc"]</field>
+    </record>
+    <record id="filter_pos_slow_moving_items" model="ir.filters">
+        <field name="name">Slow-Moving Items</field>
+        <field name="model_id">report.pos.order</field>
+        <field name="action_id" ref="point_of_sale.action_report_pos_order_all"/>
+        <field name="user_ids" eval="False"/>
+        <field name="domain">[('state', '!=', 'cancel')]</field>
+        <field name="context">{'group_by': ['product_id'], 'graph_measure': 'product_qty', 'graph_mode': 'bar', 'graph_groupbys': ['product_id'], 'graph_order': 'ASC', 'pivot_measures': ['product_qty'], 'pivot_row_groupby': ['product_id'], 'pivot_column_groupby': []}</field>
+        <field name="sort">["product_qty asc"]</field>
+    </record>
+</odoo>

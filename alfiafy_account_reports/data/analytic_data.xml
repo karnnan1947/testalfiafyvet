@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- BRD 1.6 #1: one analytic account per branch, shared by the Qatar and Oman companies -->
+    <record id="analytic_plan_branches" model="account.analytic.plan">
+        <field name="name">Branches</field>
+    </record>
+
+    <record id="analytic_branch_1_al_rayyan" model="account.analytic.account">
+        <field name="name">Branch 1 - Al Rayyan</field>
+        <field name="plan_id" ref="analytic_plan_branches"/>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="analytic_branch_2_al_wakra" model="account.analytic.account">
+        <field name="name">Branch 2 - Al Wakra</field>
+        <field name="plan_id" ref="analytic_plan_branches"/>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="analytic_branch_3_al_khor" model="account.analytic.account">
+        <field name="name">Branch 3 - Al Khor</field>
+        <field name="plan_id" ref="analytic_plan_branches"/>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="analytic_branch_4_al_shahaniya" model="account.analytic.account">
+        <field name="name">Branch 4 - Al Shahaniya</field>
+        <field name="plan_id" ref="analytic_plan_branches"/>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="analytic_branch_5_umm_salal" model="account.analytic.account">
+        <field name="name">Branch 5 - Umm Salal</field>
+        <field name="plan_id" ref="analytic_plan_branches"/>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="analytic_branch_6_doha_central" model="account.analytic.account">
+        <field name="name">Branch 6 - Doha Central</field>
+        <field name="plan_id" ref="analytic_plan_branches"/>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="analytic_main_warehouse" model="account.analytic.account">
+        <field name="name">Main Warehouse (Wholesale)</field>
+        <field name="plan_id" ref="analytic_plan_branches"/>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="analytic_oman_branch" model="account.analytic.account">
+        <field name="name">Oman Branch Operations</field>
+        <field name="plan_id" ref="analytic_plan_branches"/>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

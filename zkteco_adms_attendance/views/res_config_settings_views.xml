@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- Inherit Attendances settings: add a ZKTeco / ADMS block       -->
+    <!-- ============================================================= -->
+    <record id="res_config_settings_view_form_zkteco" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.zkteco</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="hr_attendance.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='hr_attendance']" position="inside">
+                <block title="Biometric Devices (ADMS)" name="zkteco_settings"
+                       groups="hr_attendance.group_hr_attendance_manager">
+                    <setting string="Default Attendance Policy" company_dependent="1"
+                             help="Policy applied to biometric punches when an employee has no specific policy assignment.">
+                        <field name="zkteco_default_policy_id"/>
+                    </setting>
+                    <setting string="Device Offline After" company_dependent="1"
+                             help="A device that has not reported within this many minutes is automatically marked offline by the scheduled action.">
+                        <div class="content-group">
+                            <div class="mt-2">
+                                <field name="zkteco_device_offline_minutes"
+                                       class="o_light_label" style="width: 5ch;"/>
+                                <span class="ms-2">minutes</span>
+                            </div>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

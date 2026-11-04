@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- "Any Discount" criterion: no amount / margin condition to fill in. -->
+    <record id="view_approval_steps_tree_alfiafy_sale" model="ir.ui.view">
+        <field name="name">approval.steps.tree.alfiafy.sale</field>
+        <field name="model">approval.steps</field>
+        <field name="inherit_id" ref="sale_and_purchase_approvals_steps.view_approval_steps_tree"/>
+        <field name="arch" type="xml">
+            <field name="amount_operator" position="attributes">
+                <attribute name="invisible">type == 'sale' and sale_criteria_type in ('margin', 'discount')</attribute>
+                <attribute name="required">type in ('purchase', 'delivery') or (type == 'sale' and sale_criteria_type in ('amount', 'both'))</attribute>
+            </field>
+            <field name="amount_value" position="attributes">
+                <attribute name="invisible">type == 'sale' and sale_criteria_type in ('margin', 'discount')</attribute>
+                <attribute name="required">type in ('purchase', 'delivery') or (type == 'sale' and sale_criteria_type in ('amount', 'both'))</attribute>
+            </field>
+            <field name="amount_base" position="attributes">
+                <attribute name="invisible">type == 'sale' and sale_criteria_type in ('margin', 'discount')</attribute>
+            </field>
+            <field name="margin_operator" position="attributes">
+                <attribute name="invisible">type != 'sale' or sale_criteria_type in ('amount', 'discount')</attribute>
+                <attribute name="required">type == 'sale' and sale_criteria_type in ('margin', 'both')</attribute>
+            </field>
+            <field name="margin_value" position="attributes">
+                <attribute name="invisible">type != 'sale' or sale_criteria_type in ('amount', 'discount')</attribute>
+                <attribute name="required">type == 'sale' and sale_criteria_type in ('margin', 'both')</attribute>
+            </field>
+        </field>
+    </record>
+</odoo>

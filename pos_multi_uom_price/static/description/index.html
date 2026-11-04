@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>POS Multi UOM Price</title>
+	<style type="text/css">
+		body {
+			font-family: Arial, sans-serif;
+			line-height: 1.6;
+			margin: 20px;
+		}
+		h2 {
+			color: #2c3e50;
+		}
+		ul {
+			margin-top: 0.5em;
+			margin-bottom: 1em;
+		}
+		div.figure {
+			margin-left: 2em;
+			margin-right: 2em;
+			margin-top: 1em;
+			margin-bottom: 1em;
+		}
+		img {
+			max-width: 100%;
+			height: auto;
+			border: 1px solid #ccc;
+		}
+		p strong {
+			color: #e74c3c;
+		}
+	</style>
+</head>
+<body>
+
+	<h2>POS Multi UOM Price</h2>
+
+	<p>With this module you can sell your products with different units of measure in POS.</p>
+
+  <h4>Features</h4>
+  <ul>
+    <li>Configure multiple UOM prices per product</li>
+    <li>Variant-level price control</li>
+  </ul>	
+
+  <h4>Setup</h4>
+	<p>Activate the Units of Measure setting</p>
+	<ul>
+		<li><strong>Inventory &gt; Configuration &gt; Settings</strong>
+			<ul>
+				<li>Set "Units of Measure"</li>
+			</ul>
+		</li>
+	</ul>
+	<p>Install the "POS multi uom price" module</p>
+	<p>Configure multiple UOM prices</p>
+	<ul>
+		<li><strong>Inventory &gt; Products &gt; Products</strong>
+			<ul>
+				<li>Product (Sales)
+					<ul>
+						<li>Add "UOM price"</li>
+					</ul>
+				</li>
+			</ul>
+		</li>
+	</ul>
+
+  <h4>Description</h4>
+
+	<p>Unit prices for products can be configured in the <strong>"Point of Sale"</strong> tab of each product.</p>
+
+	<p>If <strong>product variants</strong> are enabled, the unit prices defined in the <strong>product template</strong> will be automatically replicated to the variants.</p>
+
+	<ul>
+		<li>If you update the unit price in the <strong>template</strong>, the changes will be reflected in all variants.</li>
+		<li>However, if you update the unit price directly in a <strong>variant</strong>, this change will <strong>not</strong> be propagated back to the template.</li>
+		<li><strong> Important:</strong> The Point of Sale (PoS) will <strong>only</strong> load the unit prices defined in the <strong>variants</strong>, <strong>not</strong> those from the template.</li>
+	</ul>
+
+	<div class="figure">
+		<p><img alt="product_form" src="product_form.png" style="width: 800px;" /></p>
+	</div>
+
+	<ul>
+		<li>New session POS</li>
+	</ul>
+
+	<div class="figure">
+		<p><img alt="POS_multi_uom_price" src="POS_multi_uom_price.png" style="width: 800px;" /></p>
+	</div>
+	<ul>
+		<li>Order details</li>
+	</ul>
+	<div class="figure">
+		<p><img alt="order_form" src="order_form.png" style="width: 800px;" /></p>
+	</div>
+
+  <h4>Support This Project</h4>
+  <p>This module is free to use. If you’d like, feel free to buy me a coffee! 😉</p>
+  <p>
+    <a href="https://ko-fi.com/ehuerta" target="_blank">
+      <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi" />
+    </a>
+  </p>	
+</body>
+</html>

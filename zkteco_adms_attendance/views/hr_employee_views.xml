@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- Inherit the employee form: biometric identity, policies, logs -->
+    <!-- ============================================================= -->
+    <record id="view_employee_form_zkteco_biometric" model="ir.ui.view">
+        <field name="name">hr.employee.form.zkteco.biometric</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Smart button: biometric logs -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_biometric_logs" type="object"
+                        class="oe_stat_button" icon="fa-clock-o"
+                        groups="hr_attendance.group_hr_attendance_officer">
+                    <field name="biometric_log_count" widget="statinfo"
+                           string="Biometric Logs"/>
+                </button>
+            </xpath>
+
+            <!-- Biometric configuration inside the HR Settings tab -->
+            <xpath expr="//page[@name='hr_settings']" position="inside">
+                <group string="Biometric Attendance (ZKTeco)"
+                       name="zkteco_biometric"
+                       groups="hr_attendance.group_hr_attendance_officer">
+                    <group>
+                        <field name="biometric_user_id"/>
+                        <field name="biometric_policy_id"/>
+                    </group>
+                    <group>
+                        <field name="zkteco_policy_line_ids" nolabel="1" colspan="2">
+                            <list string="Policy Assignments" editable="bottom">
+                                <field name="date_from"/>
+                                <field name="date_to"/>
+                                <field name="policy_id"/>
+                            </list>
+                        </field>
+                    </group>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

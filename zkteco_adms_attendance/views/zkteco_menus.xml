@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- Top-level device dashboard (Attendances app)                  -->
+    <!-- ============================================================= -->
+    <menuitem id="menu_zkteco_devices"
+              name="Biometric Devices"
+              parent="hr_attendance.menu_hr_attendance_root"
+              action="action_zkteco_biometric_device"
+              groups="hr_attendance.group_hr_attendance_officer"
+              sequence="35"/>
+
+    <!-- ============================================================= -->
+    <!-- Configuration submenu                                         -->
+    <!-- ============================================================= -->
+    <menuitem id="menu_zkteco_config_root"
+              name="Biometric"
+              parent="hr_attendance.menu_hr_attendance_configuration"
+              groups="hr_attendance.group_hr_attendance_manager"
+              sequence="20"/>
+
+    <menuitem id="menu_zkteco_config_devices"
+              name="Devices"
+              parent="menu_zkteco_config_root"
+              action="action_zkteco_biometric_device"
+              sequence="10"/>
+
+    <menuitem id="menu_zkteco_config_policies"
+              name="Attendance Policies"
+              parent="menu_zkteco_config_root"
+              action="action_zkteco_attendance_policy"
+              sequence="20"/>
+
+    <menuitem id="menu_zkteco_config_logs"
+              name="Biometric Logs"
+              parent="menu_zkteco_config_root"
+              action="action_zkteco_biometric_attendance_log"
+              sequence="30"/>
+
+    <menuitem id="menu_zkteco_config_reprocess"
+              name="Reprocess Logs"
+              parent="menu_zkteco_config_root"
+              action="action_zkteco_reprocess_wizard"
+              sequence="40"/>
+
+</odoo>

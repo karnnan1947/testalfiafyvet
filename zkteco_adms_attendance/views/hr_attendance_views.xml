@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- List: punch statuses next to the check-in / check-out times   -->
+    <!-- ============================================================= -->
+    <record id="view_attendance_tree_inherit_zkteco" model="ir.ui.view">
+        <field name="name">hr.attendance.list.zkteco.punch.status</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
+        <field name="arch" type="xml">
+            <field name="check_out" position="after">
+                <field name="check_in_status" optional="show" widget="badge"
+                       decoration-success="check_in_status == 'on_time'"
+                       decoration-danger="check_in_status == 'late'"/>
+                <field name="check_out_status" optional="show" widget="badge"
+                       decoration-success="check_out_status == 'on_time'"
+                       decoration-danger="check_out_status == 'early'"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Form                                                          -->
+    <!-- ============================================================= -->
+    <record id="hr_attendance_view_form_inherit_zkteco" model="ir.ui.view">
+        <field name="name">hr.attendance.form.zkteco.punch.status</field>
+        <field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.hr_attendance_view_form"/>
+        <field name="arch" type="xml">
+            <field name="check_out" position="after">
+                <field name="check_in_status"/>
+                <field name="check_out_status"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

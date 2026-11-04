@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sent by the license expiry scheduled action to the compliance managers -->
+        <record id="mail_template_license_expiry_alert" model="mail.template">
+            <field name="name">Documents: License Expiry Alert</field>
+            <field name="model_id" ref="documents.model_documents_document"/>
+            <field name="subject">[URGENT] License Expiry Alert: {{ object.name }} ({{ object.days_to_expiry }} Days Left)</field>
+            <field name="email_from">{{ (object.company_id.email_formatted or user.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="description">Sent to the compliance managers when a license enters its alert window</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px; font-size: 13px;">
+    <p style="margin: 0px 0px 12px 0px;">Dear Compliance Team,</p>
+    <p style="margin: 0px 0px 12px 0px;">
+        <t t-if="object.days_to_expiry &lt; 0">
+            The license below <b>expired on <t t-out="format_date(object.expiry_date)">01/01/2026</t></b>
+            (<t t-out="-object.days_to_expiry">5</t> days ago). Please renew it urgently.
+        </t>
+        <t t-else="">
+            The license below <b>expires on <t t-out="format_date(object.expiry_date)">01/01/2026</t></b>
+            (<t t-out="object.days_to_expiry">25</t> days left). Please start the renewal.
+        </t>
+    </p>
+    <table style="border-collapse: collapse; font-size: 13px;" cellpadding="6">
+        <tr><td style="color: #666;">Document</td><td><b t-out="object.name or ''">Pharmacy License.pdf</b></td></tr>
+        <tr><td style="color: #666;">License Type</td>
+            <td t-out="dict(object._fields['document_type']._description_selection(object.env)).get(object.document_type) or ''">Pharmacy License</td></tr>
+        <tr><td style="color: #666;">License Number</td><td t-out="object.license_number or ''">PL-1234</td></tr>
+        <tr t-if="object.branch_id"><td style="color: #666;">Branch</td><td t-out="object.branch_id.name">Pharmacy Branch 1</td></tr>
+        <tr t-if="object.employee_id"><td style="color: #666;">Doctor / Employee</td><td t-out="object.employee_id.name">Dr. Khalid</td></tr>
+        <tr><td style="color: #666;">Issuing Authority</td><td t-out="object.issuing_authority or ''">Ministry of Public Health</td></tr>
+        <tr><td style="color: #666;">Expiry Date</td><td t-out="format_date(object.expiry_date)">01/01/2026</td></tr>
+        <tr><td style="color: #666;">Days Remaining</td><td><b t-out="object.days_to_expiry">25</b></td></tr>
+    </table>
+    <p style="margin: 16px 0px;">
+        <a t-att-href="object._get_license_form_url()"
+           style="background-color: #875A7B; padding: 8px 16px; color: #fff; text-decoration: none; border-radius: 5px;">
+            Open the document in Odoo
+        </a>
+    </p>
+    <p style="margin: 0px; color: #888;">A To-Do activity has been assigned to each compliance manager.</p>
+</div>
+            </field>
+        </record>
+    </data>
+</odoo>

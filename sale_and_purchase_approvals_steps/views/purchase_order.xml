@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="purchase_order_approval_inherited_view" model="ir.ui.view">
+        <field name="name">purchase.order.approval.inherited.view</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- "To Approve" replaces Confirm Order while an approval is
+                 outstanding. It submits the request for approval; it does
+                 not create the Purchase Order or the Goods Receipt. -->
+            <xpath expr="//button[@id='draft_confirm']" position="before">
+                <button name="action_send_for_approval" string="To Approve"
+                        class="oe_highlight" type="object"
+                        groups="base.group_user"
+                        invisible="not show_send_for_approval"/>
+                <button name="button_approve_po" string="Approve"
+                        class="oe_highlight" type="object"
+                        groups="base.group_user"
+                        invisible="not show_approve_button"/>
+                <!-- Cancelling while out for approval is the rejection:
+                     button_cancel prompts for a mandatory reason. -->
+                <button name="button_cancel" string="Cancel"
+                        class="btn-danger" type="object"
+                        invisible="state != 'to_approve'"/>
+                <field name="show_send_for_approval" invisible="1"/>
+                <field name="show_approve_button" invisible="1"/>
+                <field name="approval_blocked" invisible="1"/>
+                <field name="approval_status" invisible="1"/>
+                <field name="approval_step_sequence" invisible="1"/>
+            </xpath>
+
+            <!-- Core ships two Confirm Order buttons (draft and sent). Both
+                 stay hidden until the approval workflow has completed, then
+                 reappear so the buyer converts the RFQ manually. -->
+            <xpath expr="//button[@id='draft_confirm']" position="attributes">
+                <attribute name="invisible">state != 'draft' or approval_blocked</attribute>
+            </xpath>
+            <xpath expr="//button[@id='bid_confirm']" position="attributes">
+                <attribute name="invisible">state != 'sent' or approval_blocked</attribute>
+            </xpath>
+
+            <!-- Lines are frozen while the request is out for approval: which
+                 steps match (and so who can approve) is derived from the
+                 amount. Core value is "state == 'cancel' or locked". -->
+            <xpath expr="//field[@name='order_line']" position="attributes">
+                <attribute name="readonly">state in ('cancel', 'to_approve') or locked</attribute>
+            </xpath>
+
+            <!-- Status tags next to the button box. -->
+            <xpath expr="//div[hasclass('oe_button_box')]" position="after">
+                <field name="waiver_applied" invisible="1"/>
+                <span class="badge text-bg-success float-end"
+                      invisible="approval_status != 'approved' or approval_blocked">
+                    Approved
+                </span>
+                <!-- The RFQ stays editable after approval, so an approved
+                     total that is later changed must be re-approved. -->
+                <span class="badge text-bg-danger float-end"
+                      invisible="approval_status != 'approved' or not approval_blocked">
+                    Approval Superseded - Amount Changed
+                </span>
+                <span class="badge text-bg-danger float-end"
+                      invisible="approval_status != 'cancelled'">
+                    Cancelled
+                </span>
+                <span class="badge text-bg-warning float-end"
+                      invisible="not waiver_applied">
+                    Waiver Applied
+                </span>
+            </xpath>
+
+            <!-- Read-only tab with the waiver details, only visible once
+                 a waiver has actually been applied. -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Waiver" name="purchase_waiver"
+                      invisible="not waiver_applied">
+                    <group>
+                        <field name="waiver_applied" readonly="1"/>
+                        <field name="waiver_category" readonly="1"/>
+                    </group>
+                    <group string="Justification">
+                        <field name="waiver_justification" readonly="1" nolabel="1"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Approval Status column on the purchase list views.
+         Three separate core lists are reachable from the menus, so all three
+         are extended: purchase_order_kpis_tree is the Requests for Quotation
+         list (where approved-but-not-yet-confirmed records now live),
+         purchase_order_view_tree is the Purchase Orders list, and
+         purchase_order_tree is the generic fallback used by any action that
+         does not name a view - including our own My Approvals menu.
+         Anchored on 'state', which all three declare. -->
+    <record id="purchase_order_tree_approval_status" model="ir.ui.view">
+        <field name="name">purchase.order.list.approval.status</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="approval_status" widget="badge" optional="show"
+                       decoration-success="approval_status == 'approved'"
+                       decoration-warning="approval_status == 'to_approve'"
+                       decoration-danger="approval_status == 'cancelled'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="purchase_order_kpis_tree_approval_status" model="ir.ui.view">
+        <field name="name">purchase.order.kpis.list.approval.status</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="approval_status" widget="badge" optional="show"
+                       decoration-success="approval_status == 'approved'"
+                       decoration-warning="approval_status == 'to_approve'"
+                       decoration-danger="approval_status == 'cancelled'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="purchase_order_view_tree_approval_status" model="ir.ui.view">
+        <field name="name">purchase.order.view.list.approval.status</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="approval_status" widget="badge" optional="show"
+                       decoration-success="approval_status == 'approved'"
+                       decoration-warning="approval_status == 'to_approve'"
+                       decoration-danger="approval_status == 'cancelled'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Records waiting on ME as approver. The old domain filtered on user_id,
+         which is the Buyer, so approvers saw an empty list. -->
+    <record id="action_my_po_approvals" model="ir.actions.act_window">
+        <field name="name">My Approvals</field>
+        <field name="res_model">purchase.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('show_approve_button', '=', True)]</field>
+    </record>
+    <menuitem id="menu_purchase_approvals"
+              name="My Approvals"
+              parent="purchase.menu_procurement_management"
+              action="action_my_po_approvals"
+              sequence="41"/>
+</odoo>

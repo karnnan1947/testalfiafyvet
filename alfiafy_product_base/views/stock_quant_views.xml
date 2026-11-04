@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- On-hand stock: filter and group by Manufacturer / Supplier -->
+    <record id="quant_search_view_alfiafy" model="ir.ui.view">
+        <field name="name">stock.quant.search.alfiafy.product.base</field>
+        <field name="model">stock.quant</field>
+        <field name="inherit_id" ref="stock.quant_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="product_manufacturer_id"/>
+                <field name="product_supplier_id"/>
+            </xpath>
+            <xpath expr="//filter[@name='productcategorygroup']" position="after">
+                <filter string="Manufacturer" name="manufacturergroup" context="{'group_by': 'product_manufacturer_id'}"/>
+                <filter string="Supplier" name="suppliergroup" context="{'group_by': 'product_supplier_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_stock_quant_tree_editable_alfiafy" model="ir.ui.view">
+        <field name="name">stock.quant.list.editable.alfiafy.product.base</field>
+        <field name="model">stock.quant</field>
+        <field name="inherit_id" ref="stock.view_stock_quant_tree_editable"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="product_manufacturer_id" optional="show"/>
+                <field name="product_supplier_id" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

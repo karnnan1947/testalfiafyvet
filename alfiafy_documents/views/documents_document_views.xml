@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- License form. Odoo 20 Documents has no full form view for documents.document
+         (the app uses a preview / details panel), so the module provides its own,
+         used by Documents > Regulatory Licenses. High priority: it never becomes the
+         default form of the Documents app. -->
+    <record id="documents_document_view_form_license" model="ir.ui.view">
+        <field name="name">documents.document.form.license</field>
+        <field name="model">documents.document</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <form string="License Document">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" required="1" placeholder="e.g. Pharmacy License - Al Wakra"/></h1>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <field name="is_license_doc" nolabel="1"/>
+                            <label for="is_license_doc"/>
+                        </div>
+                        <field name="expiry_status" widget="badge" nolabel="1" class="fs-6"
+                               invisible="not expiry_status"
+                               decoration-success="expiry_status == 'valid'"
+                               decoration-warning="expiry_status == 'expiring_soon'"
+                               decoration-danger="expiry_status == 'expired'"/>
+                    </div>
+                    <group>
+                        <group string="Document">
+                            <field name="raw" filename="attachment_name" string="File" required="type == 'binary'"/>
+                            <field name="attachment_name" invisible="1"/>
+                            <field name="type" invisible="1"/>
+                            <field name="folder_id" domain="[('type', '=', 'folder')]" options="{'no_create': True}"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create': True}"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook invisible="not is_license_doc">
+                        <page name="license_details" string="License &amp; Regulatory Details">
+                            <group>
+                                <group string="License">
+                                    <field name="document_type" required="is_license_doc"/>
+                                    <field name="license_number"/>
+                                    <field name="issuing_authority"/>
+                                    <field name="branch_id" options="{'no_create': True}"/>
+                                    <field name="employee_id" options="{'no_create': True}"/>
+                                </group>
+                                <group string="Validity">
+                                    <field name="issue_date"/>
+                                    <field name="expiry_date" required="is_license_doc"/>
+                                    <field name="alert_days_before"/>
+                                    <field name="days_to_expiry" invisible="not expiry_date"/>
+                                    <field name="expiry_status" widget="badge"
+                                           decoration-success="expiry_status == 'valid'"
+                                           decoration-warning="expiry_status == 'expiring_soon'"
+                                           decoration-danger="expiry_status == 'expired'"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="documents_document_view_list_license" model="ir.ui.view">
+        <field name="name">documents.document.list.license</field>
+        <field name="model">documents.document</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Regulatory Licenses" decoration-danger="expiry_status == 'expired'"
+                  decoration-warning="expiry_status == 'expiring_soon'">
+                <field name="name"/>
+                <field name="document_type"/>
+                <field name="license_number"/>
+                <field name="branch_id" optional="show"/>
+                <field name="employee_id" optional="show"/>
+                <field name="issuing_authority" optional="hide"/>
+                <field name="issue_date" optional="hide"/>
+                <field name="expiry_date"/>
+                <field name="days_to_expiry"/>
+                <field name="expiry_status" widget="badge"
+                       decoration-success="expiry_status == 'valid'"
+                       decoration-warning="expiry_status == 'expiring_soon'"
+                       decoration-danger="expiry_status == 'expired'"/>
+                <field name="activity_ids" widget="list_activity" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Compliance kanban: one column per expiry status -->
+    <record id="documents_document_view_kanban_license" model="ir.ui.view">
+        <field name="name">documents.document.kanban.license</field>
+        <field name="model">documents.document</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <kanban string="Regulatory Licenses" default_group_by="expiry_status" quick_create="false">
+                <field name="expiry_status"/>
+                <field name="days_to_expiry"/>
+                <templates>
+                    <t t-name="card">
+                        <field name="name" class="fw-bold"/>
+                        <div class="text-muted small">
+                            <field name="document_type"/>
+                            <t t-if="record.license_number.raw_value"> &#183; <field name="license_number"/></t>
+                        </div>
+                        <div class="small mt-1">
+                            <field name="branch_id"/>
+                            <field name="employee_id"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span class="small">Expires <field name="expiry_date"/></span>
+                            <span t-attf-class="badge rounded-pill #{record.expiry_status.raw_value == 'expired' ? 'text-bg-danger' : (record.expiry_status.raw_value == 'expiring_soon' ? 'text-bg-warning' : 'text-bg-success')}">
+                                <t t-if="record.days_to_expiry.raw_value &lt; 0"><t t-out="-record.days_to_expiry.raw_value"/> days ago</t>
+                                <t t-else=""><t t-out="record.days_to_expiry.raw_value"/> days left</t>
+                            </span>
+                        </div>
+                        <footer>
+                            <field name="activity_ids" widget="kanban_activity"/>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Documents app kanban: expiry status on license cards -->
+    <record id="document_view_kanban_inherit_license" model="ir.ui.view">
+        <field name="name">documents.document.kanban.inherit.license</field>
+        <field name="model">documents.document</field>
+        <field name="inherit_id" ref="documents.document_view_kanban"/>
+        <field name="arch" type="xml">
+            <field name="write_date" position="after">
+                <field name="is_license_doc"/>
+                <field name="expiry_status"/>
+            </field>
+            <xpath expr="//div[hasclass('o_kanban_record_body')]" position="after">
+                <div t-if="record.is_license_doc.raw_value and record.expiry_status.raw_value">
+                    <span t-attf-class="badge rounded-pill #{record.expiry_status.raw_value == 'expired' ? 'text-bg-danger' : (record.expiry_status.raw_value == 'expiring_soon' ? 'text-bg-warning' : 'text-bg-success')}">
+                        <field name="expiry_status"/>
+                    </span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="document_view_search_inherit_license" model="ir.ui.view">
+        <field name="name">documents.document.search.inherit.license</field>
+        <field name="model">documents.document</field>
+        <field name="inherit_id" ref="documents.document_view_search"/>
+        <field name="arch" type="xml">
+            <filter name="my_documents_filter" position="before">
+                <filter string="Regulatory Licenses" name="filter_license_docs" domain="[('is_license_doc', '=', True)]"/>
+                <filter string="Expiring Soon" name="filter_expiring_soon" domain="[('expiry_status', '=', 'expiring_soon')]"/>
+                <filter string="Expired" name="filter_expired" domain="[('expiry_status', '=', 'expired')]"/>
+                <separator/>
+            </filter>
+            <filter name="filter_partner_id" position="before">
+                <filter string="Expiry Status" name="group_expiry_status" domain="[]" context="{'group_by': 'expiry_status'}"/>
+            </filter>
+        </field>
+    </record>
+
+    <record id="action_regulatory_licenses" model="ir.actions.act_window">
+        <field name="name">Regulatory Licenses</field>
+        <field name="res_model">documents.document</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'kanban', 'view_id': ref('documents_document_view_kanban_license')}),
+            Command.create({'view_mode': 'list', 'view_id': ref('documents_document_view_list_license')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('documents_document_view_form_license')})]"/>
+        <field name="search_view_id" ref="documents.document_view_search"/>
+        <field name="domain">[('type', '!=', 'folder')]</field>
+        <field name="context">{'search_default_filter_license_docs': 1, 'default_is_license_doc': True, 'default_type': 'binary'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Record a regulatory license</p>
+            <p>Pharmacy licenses, doctors' licenses, commercial registrations and vehicle permits with their expiry date.
+               The compliance managers are alerted before they expire.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_regulatory_licenses"
+              name="Regulatory Licenses"
+              parent="documents.menu_root"
+              action="action_regulatory_licenses"
+              sequence="5"/>
+</odoo>

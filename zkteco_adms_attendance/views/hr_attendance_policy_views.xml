@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- List                                                          -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_attendance_policy_list" model="ir.ui.view">
+        <field name="name">hr.attendance.policy.list</field>
+        <field name="model">hr.attendance.policy</field>
+        <field name="arch" type="xml">
+            <list string="Attendance Policies">
+                <field name="name"/>
+                <field name="mode"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Form                                                          -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_attendance_policy_form" model="ir.ui.view">
+        <field name="name">hr.attendance.policy.form</field>
+        <field name="model">hr.attendance.policy</field>
+        <field name="arch" type="xml">
+            <form string="Attendance Policy">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Standard Shift Policy"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Pairing Mode">
+                            <field name="mode"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Parameters">
+                            <field name="flexible_window_hours"
+                                   invisible="mode not in ('flexible', 'calendar', 'fixed_time')"/>
+                            <field name="dedup_window_seconds"/>
+                            <field name="min_gap_minutes"/>
+                            <field name="first_in_last_out" invisible="mode != 'fixed_time'"/>
+                        </group>
+                        <group string="Fixed Working Time"
+                               invisible="mode != 'fixed_time'">
+                            <field name="shift_start_time" widget="float_time"/>
+                            <field name="shift_end_time" widget="float_time"/>
+                            <field name="late_in_tolerance"/>
+                            <field name="early_out_tolerance"/>
+                        </group>
+                    </group>
+                    <group string="Notes">
+                        <field name="note" nolabel="1"
+                               placeholder="Describe when and how this policy applies..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Search                                                        -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_attendance_policy_search" model="ir.ui.view">
+        <field name="name">hr.attendance.policy.search</field>
+        <field name="model">hr.attendance.policy</field>
+        <field name="arch" type="xml">
+            <search string="Attendance Policies">
+                <field name="name"/>
+                <field name="mode"/>
+                <filter name="filter_archived" string="Archived"
+                        domain="[('active', '=', False)]"/>
+                <group>
+                    <filter name="group_mode" string="Mode"
+                            context="{'group_by': 'mode'}"/>
+                    <filter name="group_company" string="Company"
+                            context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Action                                                        -->
+    <!-- ============================================================= -->
+    <record id="action_zkteco_attendance_policy" model="ir.actions.act_window">
+        <field name="name">Attendance Policies</field>
+        <field name="res_model">hr.attendance.policy</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_zkteco_attendance_policy_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define your first attendance policy
+            </p>
+            <p>
+                A policy decides how a stream of raw biometric punches is turned into
+                check-in / check-out attendance records.
+            </p>
+        </field>
+    </record>
+
+</odoo>

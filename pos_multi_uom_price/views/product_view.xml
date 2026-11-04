@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    © 2025 ehuerta _at_ ixer.mx
+    License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl-3.0.html).
+-->
+<odoo>
+<record id="product_template_form_inherit_uom_prices_pos_view" model="ir.ui.view">
+    <field name="name">product.template.form.uom.prices.pos.inherit</field>
+    <field name="model">product.template</field>
+    <field name="inherit_id" ref="product.product_template_only_form_view"/>
+    <field name="arch" type="xml">
+        <xpath expr="//page[@name='pos']/group" position="inside">
+            <group name="multi_uom" string="UOM Price" colspan="2">
+                <div class="text-muted" colspan="2">
+                    Own selling price of ONE unit of each other unit of measure, e.g. Box of 5 = 300.00,
+                    Box of 10 = 500.00 (the product's own unit keeps its sales price). Only the units
+                    listed here can be chosen with the UoM button in the POS.
+                </div>
+                <field name="multi_uom_price_ids" nolabel="1" colspan="2">
+                    <list editable="bottom">
+                        <field name="uom_id"/>
+                        <field name="price"/>
+                    </list>
+                </field>
+            </group>
+        </xpath>
+    </field>
+</record>
+<record id="product_form_inherit_uom_prices_pos_view" model="ir.ui.view">
+    <field name="name">product.form.uom.prices.pos.inherit</field>
+    <field name="model">product.product</field>
+    <field name="inherit_id" ref="product.product_normal_form_view"/>
+    <field name="arch" type="xml">
+        <xpath expr="//page[@name='pos']/group" position="inside">
+            <group name="multi_uom" string="UOM Price" colspan="2">
+                <field name="multi_uom_price_ids" nolabel="1" colspan="2">
+                    <list editable="bottom">
+                        <field name="uom_id"/>
+                        <field name="price"/>
+                    </list>
+                </field>
+            </group>
+        </xpath>
+    </field>
+</record>
+</odoo>

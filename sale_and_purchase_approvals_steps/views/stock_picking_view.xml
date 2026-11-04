@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_inherit_approval" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.approval</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="button_approve_delivery" string="Approve"
+                        type="object" class="oe_highlight"
+                        groups="base.group_user"
+                        invisible="not show_approve_button"/>
+                <!-- Core hides its own Cancel while the transfer sits in
+                     'to_approve', so the approver gets one here. Cancelling
+                     during approval is the rejection and prompts for a
+                     mandatory reason. -->
+                <button name="action_cancel" string="Cancel"
+                        type="object" class="btn-danger"
+                        invisible="state != 'to_approve'"/>
+                <field name="show_approve_button" invisible="1"/>
+                <field name="approval_step_sequence" invisible="1"/>
+                <field name="approval_status" invisible="1"/>
+            </xpath>
+
+            <!-- Status tags. A cancelled transfer is handled via core, so
+                 without this the outcome leaves no visible trace. -->
+            <xpath expr="//div[hasclass('oe_button_box')]" position="after">
+                <span class="badge text-bg-success float-end"
+                      invisible="approval_status != 'approved'">
+                    Approved
+                </span>
+                <span class="badge text-bg-danger float-end"
+                      invisible="approval_status != 'cancelled'">
+                    Cancelled
+                </span>
+            </xpath>
+            <!-- Odoo 20: both Validate buttons are driven by the computed
+                 validate_button_style, which models/stock_picking.py sets to
+                 'invisible' while the transfer is waiting for approval. -->
+        </field>
+    </record>
+
+    <!-- Approval Status column on the transfers list. -->
+    <record id="vpicktree_approval_status" model="ir.ui.view">
+        <field name="name">stock.picking.list.approval.status</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="approval_status" widget="badge" optional="show"
+                       decoration-success="approval_status == 'approved'"
+                       decoration-warning="approval_status == 'to_approve'"
+                       decoration-danger="approval_status == 'cancelled'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Records waiting on ME as approver. The old domain had no user filter
+         at all, so every approver saw everyone else's pending deliveries. -->
+    <record id="action_my_delivery_approvals" model="ir.actions.act_window">
+        <field name="name">My Approvals</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('show_approve_button', '=', True)]</field>
+    </record>
+    <menuitem id="menu_delivery_approvals"
+              name="My Approvals"
+              parent="stock.menu_stock_warehouse_mgmt"
+              action="action_my_delivery_approvals"
+              sequence="41"/>
+</odoo>

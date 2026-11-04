@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pos_branch_target_view_form" model="ir.ui.view">
+        <field name="name">pos.branch.target.form</field>
+        <field name="model">pos.branch.target</field>
+        <field name="arch" type="xml">
+            <form string="Branch Sales Target">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1" placeholder="Branch - Period"/></h1>
+                    </div>
+                    <group>
+                        <group string="Target">
+                            <field name="config_id" options="{'no_create': True}"/>
+                            <field name="analytic_account_id"/>
+                            <field name="target_amount"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                        <group string="Period">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                    <separator string="Key Performance Indicators"/>
+                    <div class="row g-3 mb-2">
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <div class="card h-100 p-3">
+                                <div class="text-muted small text-uppercase">Achieved Sales</div>
+                                <field name="achieved_amount" class="fs-3 fw-bold"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <div class="card h-100 p-3">
+                                <div class="text-muted small text-uppercase">Achievement vs Target</div>
+                                <field name="achievement_ratio" widget="progressbar" class="mt-2 fw-bold"
+                                       decoration-success="achievement_ratio &gt;= 90"
+                                       decoration-warning="achievement_ratio &gt;= 70 and achievement_ratio &lt; 90"
+                                       decoration-danger="achievement_ratio &lt; 70"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <div class="card h-100 p-3">
+                                <div class="text-muted small text-uppercase">MoM Growth (daily average)</div>
+                                <div class="fs-3 fw-bold">
+                                    <span invisible="mom_growth_rate &lt; 0" class="text-success">▲ +</span>
+                                    <span invisible="mom_growth_rate &gt;= 0" class="text-danger">▼ </span>
+                                    <field name="mom_growth_rate" nolabel="1" class="d-inline"
+                                           decoration-success="mom_growth_rate &gt;= 0" decoration-danger="mom_growth_rate &lt; 0"/> %
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <div class="card h-100 p-3">
+                                <div class="text-muted small text-uppercase">Orders</div>
+                                <field name="order_count" class="fs-3 fw-bold"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <div class="card h-100 p-3">
+                                <div class="text-muted small text-uppercase">Unique Customers</div>
+                                <field name="customer_count" class="fs-3 fw-bold"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <div class="card h-100 p-3">
+                                <div class="text-muted small text-uppercase">Average Ticket</div>
+                                <field name="average_ticket" class="fs-3 fw-bold"/>
+                            </div>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="pos_branch_target_view_list" model="ir.ui.view">
+        <field name="name">pos.branch.target.list</field>
+        <field name="model">pos.branch.target</field>
+        <field name="arch" type="xml">
+            <list string="Branch Sales Targets">
+                <field name="name"/>
+                <field name="config_id" optional="hide"/>
+                <field name="analytic_account_id" optional="show"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="target_amount" sum="Total Target"/>
+                <field name="achieved_amount"/>
+                <field name="achievement_ratio" class="fw-bold"
+                       decoration-success="achievement_ratio &gt;= 90"
+                       decoration-warning="achievement_ratio &gt;= 70 and achievement_ratio &lt; 90"
+                       decoration-danger="achievement_ratio &lt; 70"/>
+                <field name="order_count"/>
+                <field name="customer_count"/>
+                <field name="average_ticket"/>
+                <field name="mom_growth_rate"
+                       decoration-success="mom_growth_rate &gt;= 0" decoration-danger="mom_growth_rate &lt; 0"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="pos_branch_target_view_kanban" model="ir.ui.view">
+        <field name="name">pos.branch.target.kanban</field>
+        <field name="model">pos.branch.target</field>
+        <field name="arch" type="xml">
+            <kanban string="Branch Performance Dashboard">
+                <field name="currency_id"/>
+                <field name="mom_growth_rate"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <field name="config_id" class="fw-bold fs-5"/>
+                                <div class="text-muted small">
+                                    <field name="date_from"/> - <field name="date_to"/>
+                                </div>
+                            </div>
+                            <span t-if="record.mom_growth_rate.raw_value &gt;= 0" class="badge rounded-pill text-bg-success fs-6"
+                                  title="Month-over-Month growth of the average daily sales">▲ +<t t-out="record.mom_growth_rate.value"/>%</span>
+                            <span t-else="" class="badge rounded-pill text-bg-danger fs-6"
+                                  title="Month-over-Month growth of the average daily sales">▼ <t t-out="record.mom_growth_rate.value"/>%</span>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <div class="text-muted small">Monthly Target</div>
+                                <field name="target_amount" widget="monetary" class="fw-bold"/>
+                            </div>
+                            <div class="col-6 text-end">
+                                <div class="text-muted small">Actual Sales</div>
+                                <field name="achieved_amount" widget="monetary" class="fw-bold fs-5"/>
+                            </div>
+                        </div>
+                        <field name="achievement_ratio" widget="progressbar" class="mt-2"
+                               decoration-success="achievement_ratio &gt;= 90"
+                               decoration-warning="achievement_ratio &gt;= 70 and achievement_ratio &lt; 90"
+                               decoration-danger="achievement_ratio &lt; 70"/>
+                        <div class="d-flex flex-wrap gap-1 mt-3">
+                            <span class="badge rounded-pill text-bg-secondary fs-6 fw-normal" title="Orders">
+                                <i class="fa fa-shopping-basket me-1" role="img" aria-label="Orders"/><field name="order_count"/> Orders
+                            </span>
+                            <span class="badge rounded-pill text-bg-secondary fs-6 fw-normal" title="Unique customers">
+                                <i class="fa fa-users me-1" role="img" aria-label="Customers"/><field name="customer_count"/> Customers
+                            </span>
+                            <span class="badge rounded-pill text-bg-secondary fs-6 fw-normal" title="Average ticket value">
+                                <i class="fa fa-ticket me-1" role="img" aria-label="Average ticket"/>Avg <field name="average_ticket" widget="monetary" class="d-inline-block"/>
+                            </span>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="pos_branch_target_view_search" model="ir.ui.view">
+        <field name="name">pos.branch.target.search</field>
+        <field name="model">pos.branch.target</field>
+        <field name="arch" type="xml">
+            <search string="Branch Sales Targets">
+                <field name="config_id"/>
+                <field name="analytic_account_id"/>
+                <filter name="filter_date_from" date="date_from" string="Period"/>
+                <group>
+                    <filter name="group_config" string="POS Register" context="{'group_by': 'config_id'}"/>
+                    <filter name="group_period" string="Period" context="{'group_by': 'date_from:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_pos_branch_target" model="ir.actions.act_window">
+        <field name="name">Branch Performance Dashboard</field>
+        <field name="res_model">pos.branch.target</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="pos_branch_target_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Set a sales target for a branch register</p>
+            <p>Sales, orders, customers, average ticket and month-over-month trend are read live from the POS orders of the register.</p>
+        </field>
+    </record>
+</odoo>

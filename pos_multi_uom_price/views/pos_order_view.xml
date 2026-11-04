@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    © 2025 ehuerta _at_ ixer.mx
+    License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl-3.0.html).
+-->
+<odoo>
+<record id="pos_order_form_inherit_unit_cost_line" model="ir.ui.view">
+    <field name="name">pos.order.form.inherit.unit.cost.line</field>
+    <field name="model">pos.order</field>
+    <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//page[@name='products']/field[@name='lines']/list/field[@name='total_cost']" position="before">
+            <field name="unit_cost" invisible="not is_total_cost_computed" optional="hide" widget="monetary"/>
+        </xpath>
+    </field>
+</record>
+</odoo>

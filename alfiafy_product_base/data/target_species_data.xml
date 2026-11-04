@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="species_camel" model="alfiafy.target.species">
+            <field name="name">Camel</field><field name="sequence">10</field><field name="color">3</field>
+        </record>
+        <record id="species_horse" model="alfiafy.target.species">
+            <field name="name">Horse</field><field name="sequence">20</field><field name="color">2</field>
+        </record>
+        <record id="species_cattle" model="alfiafy.target.species">
+            <field name="name">Cattle</field><field name="sequence">30</field><field name="color">4</field>
+        </record>
+        <record id="species_sheep_goat" model="alfiafy.target.species">
+            <field name="name">Sheep and Goat</field><field name="sequence">40</field><field name="color">10</field>
+        </record>
+        <record id="species_poultry" model="alfiafy.target.species">
+            <field name="name">Poultry</field><field name="sequence">50</field><field name="color">5</field>
+        </record>
+        <record id="species_dog" model="alfiafy.target.species">
+            <field name="name">Dog</field><field name="sequence">60</field><field name="color">7</field>
+        </record>
+        <record id="species_cat" model="alfiafy.target.species">
+            <field name="name">Cat</field><field name="sequence">70</field><field name="color">8</field>
+        </record>
+        <record id="species_bird" model="alfiafy.target.species">
+            <field name="name">Pet Birds</field><field name="sequence">80</field><field name="color">9</field>
+        </record>
+    </data>
+</odoo>

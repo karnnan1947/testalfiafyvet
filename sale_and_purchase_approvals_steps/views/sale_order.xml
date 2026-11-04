@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="sale_order_approval_inherited_view" model="ir.ui.view">
+        <field name="name">sale.order.approval.inherited.view</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+
+            <!-- Send for Approval / Approve / Cancel -->
+            <xpath expr="//button[@id='quotation_send_primary']" position="before">
+                <button name="action_send_for_approval" string="Send for Approval"
+                    class="btn-primary" type="object"
+                    groups="base.group_user"
+                    invisible="not show_send_for_approval" />
+                <button name="button_approve" string="Approve"
+                    class="oe_highlight" type="object"
+                    groups="base.group_user"
+                    invisible="not show_approve_button" />
+                <!-- Cancelling while out for approval is the rejection:
+                     action_cancel prompts for a mandatory reason. -->
+                <button name="action_cancel" string="Cancel"
+                    class="btn-danger" type="object"
+                    invisible="state != 'to_approve'" />
+                <field name="show_send_for_approval" invisible="1" />
+                <field name="show_approve_button" invisible="1" />
+                <field name="approval_blocked" invisible="1" />
+                <field name="approval_step_sequence" invisible="1" />
+                <field name="approval_type" invisible="1" />
+                <field name="approval_status" invisible="1" />
+            </xpath>
+
+            <!-- Pro-forma stays gated while approval is outstanding. Once
+                 approved these come back, with the record still a Quotation.
+                 Printing and emailing the quotation are not gated: both may
+                 happen before, during, or after approval. -->
+            <xpath expr="//button[@id='send_proforma_primary']" position="attributes">
+                <attribute name="invisible">state != 'draft' or invoice_count &gt;= 1 or approval_blocked</attribute>
+            </xpath>
+            <xpath expr="//button[@id='send_proforma']" position="attributes">
+                <attribute name="invisible">state == 'draft' or invoice_count &gt;= 1 or approval_blocked</attribute>
+            </xpath>
+
+            <!-- Confirm stays a manual step and is hidden until approved.
+                 Core ships two of them: id="action_confirm" for 'sent', and
+                 an id-less one for 'draft'. -->
+            <xpath expr="//button[@id='action_confirm']" position="attributes">
+                <attribute name="invisible">state != 'sent' or approval_blocked</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_confirm'][not(@id)]" position="attributes">
+                <attribute name="invisible">state != 'draft' or approval_blocked</attribute>
+            </xpath>
+
+            <!-- Lines are frozen while the order is out for approval: which
+                 steps match (and so who can approve) is derived from the
+                 amount and margin, and editing mid-approval can leave the
+                 order with no valid approver. Core value is
+                 "state == 'cancel' or locked". -->
+            <xpath expr="//field[@name='order_line']" position="attributes">
+                <attribute name="readonly">state in ('cancel', 'to_approve') or locked</attribute>
+            </xpath>
+
+            <!-- "Approved" badge, so it is obvious the quotation carries an
+                 approval even though it is still in the Quotation stage. -->
+            <xpath expr="//div[hasclass('oe_button_box')]" position="after">
+                <span class="badge text-bg-success float-end"
+                      invisible="approval_status != 'approved' or approval_blocked">
+                    Approved
+                </span>
+                <!-- The quotation stays editable after approval, so an
+                     approved total that is later changed must be re-approved. -->
+                <span class="badge text-bg-danger float-end"
+                      invisible="approval_status != 'approved' or not approval_blocked">
+                    Approval Superseded - Amount Changed
+                </span>
+                <span class="badge text-bg-danger float-end"
+                      invisible="approval_status != 'cancelled'">
+                    Cancelled
+                </span>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Approval Status column on the sale list views.
+         Only the base list needs extending: Quotations, Sales Orders, the
+         upload list and the onboarding list are all primary views inheriting
+         sale.sale_order_tree, so they inherit the column too. -->
+    <record id="sale_order_tree_approval_status" model="ir.ui.view">
+        <field name="name">sale.order.list.approval.status</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.sale_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="approval_status" widget="badge" optional="show"
+                       decoration-success="approval_status == 'approved'"
+                       decoration-warning="approval_status == 'to_approve'"
+                       decoration-danger="approval_status == 'cancelled'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Records waiting on ME as approver. The old domain filtered on user_id,
+         which is the Salesperson, so approvers saw an empty list. -->
+    <record id="action_my_approvals" model="ir.actions.act_window">
+        <field name="name">My Approvals</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('show_approve_button', '=', True)]</field>
+    </record>
+    <menuitem id="menu_sale_approvals"
+        name="My Approvals"
+        parent="sale.sale_order_menu"
+        action="action_my_approvals"
+        sequence="41" />
+</odoo>

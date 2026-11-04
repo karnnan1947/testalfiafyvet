@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pos_pos_form_alfiafy_pos" model="ir.ui.view">
+        <field name="name">pos.order.form.alfiafy.pos</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='products']/field[@name='lines']/list/field[@name='discount']" position="after">
+                <field name="discount_approved_by_id" string="Disc. Approved By" readonly="1" optional="show"/>
+            </xpath>
+            <xpath expr="//page[@name='products']/field[@name='lines']/form//field[@name='discount']" position="after">
+                <field name="discount_approved_by_id" readonly="1" invisible="not discount_approved_by_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- unit_cost (pos_multi_uom_price) is a cost figure like total_cost -->
+    <record id="pos_order_form_unit_cost_restricted" model="ir.ui.view">
+        <field name="name">pos.order.form.unit.cost.restricted</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="pos_multi_uom_price.pos_order_form_inherit_unit_cost_line"/>
+        <field name="arch" type="xml">
+            <field name="unit_cost" position="attributes">
+                <attribute name="groups">restricted_cost_access.group_manager_cost</attribute>
+            </field>
+        </field>
+    </record>
+</odoo>

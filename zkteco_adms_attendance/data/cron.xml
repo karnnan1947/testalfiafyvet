@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!--
+            Periodically flips online devices that have stopped sending
+            heartbeats to the 'offline' state and notifies managers.
+        -->
+        <record id="cron_zkteco_mark_offline" model="ir.cron">
+            <field name="name">ZKTeco: Mark Stale Devices Offline</field>
+            <field name="model_id" ref="model_zkteco_biometric_device"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_mark_offline()</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">5</field>
+            <field name="interval_type">minutes</field>
+            <field name="priority">10</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>

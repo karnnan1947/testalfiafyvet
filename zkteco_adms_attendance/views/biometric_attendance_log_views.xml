@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- List (read-only audit log)                                    -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_biometric_attendance_log_list" model="ir.ui.view">
+        <field name="name">zkteco.biometric.attendance.log.list</field>
+        <field name="model">zkteco.biometric.attendance.log</field>
+        <field name="arch" type="xml">
+            <list string="Biometric Logs"
+                decoration-success="process_state == 'done'"
+                decoration-warning="process_state == 'unmatched'"
+                decoration-danger="process_state == 'error'"
+                decoration-muted="process_state in ('duplicate', 'skipped')">
+                <field name="punch_datetime" />
+                <field name="biometric_user_id" />
+                <field name="employee_id" />
+                <field name="device_id" />
+                <field name="punch_type" />
+                <field name="punch_status" optional="show" widget="badge"
+                    decoration-success="punch_status in ('in_on_time', 'out_on_time', 'in_early', 'out_late')"
+                    decoration-danger="punch_status in ('in_late', 'out_early')" />
+                <field name="verify_mode" />
+                <field name="process_state" widget="badge"
+                    decoration-success="process_state == 'done'"
+                    decoration-warning="process_state in ('unmatched', 'pending')"
+                    decoration-danger="process_state == 'error'"
+                    decoration-muted="process_state in ('duplicate', 'skipped')" />
+                <field name="processed" widget="boolean_toggle" readonly="1" />
+                <field name="hr_attendance_id" optional="hide" />
+                <field name="company_id" groups="base.group_multi_company" optional="hide" />
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Form (read-only + reprocess)                                  -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_biometric_attendance_log_form" model="ir.ui.view">
+        <field name="name">zkteco.biometric.attendance.log.form</field>
+        <field name="model">zkteco.biometric.attendance.log</field>
+        <field name="arch" type="xml">
+            <form string="Biometric Log">
+                <header>
+                    <button name="action_reprocess" type="object"
+                        string="Reprocess" class="btn-primary" />
+                    <field name="process_state" widget="statusbar"
+                        statusbar_visible="pending,done,unmatched,duplicate,skipped,error" />
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Punch">
+                            <field name="device_id" readonly="id" />
+                            <field name="biometric_user_id" readonly="id" />
+                            <field name="employee_id" readonly="id" />
+                            <field name="punch_datetime" readonly="id" />
+                            <field name="punch_type" readonly="id" />
+                            <field name="verify_mode" readonly="id" />
+                            <field name="status_code" readonly="id" />
+                        </group>
+                        <group string="Processing">
+                            <field name="processed" readonly="1" />
+                            <field name="process_state" readonly="1" />
+                            <field name="hr_attendance_id" readonly="1" />
+                            <field name="punch_status" readonly="1" />
+                            <field name="process_note" readonly="1" />
+                            <field name="company_id" groups="base.group_multi_company" readonly="1" />
+                        </group>
+                    </group>
+                    <group string="Raw Payload" invisible="not raw_payload">
+                        <field name="raw_payload" nolabel="1" readonly="1" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Search                                                        -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_biometric_attendance_log_search" model="ir.ui.view">
+        <field name="name">zkteco.biometric.attendance.log.search</field>
+        <field name="model">zkteco.biometric.attendance.log</field>
+        <field name="arch" type="xml">
+            <search string="Biometric Logs">
+                <field name="biometric_user_id" />
+                <field name="employee_id" />
+                <field name="device_id" />
+                <filter name="filter_processed" string="Processed"
+                    domain="[('processed', '=', True)]" />
+                <filter name="filter_unprocessed" string="Unprocessed"
+                    domain="[('processed', '=', False)]" />
+                <separator />
+                <filter name="filter_unmatched" string="Unmatched Employee"
+                    domain="[('process_state', '=', 'unmatched')]" />
+                <filter name="filter_errors" string="Errors"
+                    domain="[('process_state', '=', 'error')]" />
+                <filter name="filter_duplicate" string="Duplicates"
+                    domain="[('process_state', '=', 'duplicate')]" />
+                <separator />
+                <filter name="filter_late_arrivals" string="Late Arrivals"
+                    domain="[('punch_status', '=', 'in_late')]" />
+                <filter name="filter_early_leavers" string="Early Leavers"
+                    domain="[('punch_status', '=', 'out_early')]" />
+                <separator />
+                <filter name="filter_today" string="Today"
+                    domain="[('punch_datetime', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]" />
+                <group>
+                    <filter name="group_device" string="Device"
+                        context="{'group_by': 'device_id'}" />
+                    <filter name="group_employee" string="Employee"
+                        context="{'group_by': 'employee_id'}" />
+                    <filter name="group_process_state" string="Process State"
+                        context="{'group_by': 'process_state'}" />
+                    <filter name="group_punch_type" string="Punch Type"
+                        context="{'group_by': 'punch_type'}" />
+                    <filter name="group_punch_status" string="Punch Status"
+                        context="{'group_by': 'punch_status'}" />
+                    <filter name="group_punch_date" string="Punch Date"
+                        context="{'group_by': 'punch_datetime:day'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Action                                                        -->
+    <!-- ============================================================= -->
+    <record id="action_zkteco_biometric_attendance_log" model="ir.actions.act_window">
+        <field name="name">Biometric Logs</field>
+        <field name="res_model">zkteco.biometric.attendance.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_zkteco_biometric_attendance_log_search" />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No biometric punches recorded yet
+            </p>
+            <p>
+                Raw punches pushed by biometric devices are stored here as an
+                immutable audit trail and turned into attendances by the policy engine.
+            </p>
+        </field>
+    </record>
+
+</odoo>

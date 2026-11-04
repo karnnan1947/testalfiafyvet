@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- MPR/2026/00001 -->
+        <record id="seq_material_purchase_requisition" model="ir.sequence">
+            <field name="name">Material Purchase Requisition</field>
+            <field name="code">material.purchase.requisition</field>
+            <field name="prefix">MPR/%(year)s/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

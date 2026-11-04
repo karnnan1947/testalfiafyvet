@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- Wizard form                                                   -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_attendance_reprocess_wizard_form" model="ir.ui.view">
+        <field name="name">zkteco.attendance.reprocess.wizard.form</field>
+        <field name="model">zkteco.attendance.reprocess.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reprocess Biometric Logs">
+                <div class="alert alert-warning" role="status"
+                     invisible="scope != 'all'">
+                    <i class="fa fa-exclamation-triangle me-1"/>
+                    A full rebuild deletes every attendance generated from the selected
+                    logs and recreates them from scratch. Manually entered attendances
+                    are not affected.
+                </div>
+                <group>
+                    <group string="Selection">
+                        <field name="device_ids" widget="many2many_tags"
+                               options="{'no_create': True}"/>
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                    </group>
+                    <group string="Scope">
+                        <field name="scope"/>
+                        <field name="log_count_preview"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_reprocess" type="object"
+                            string="Reprocess" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Action                                                        -->
+    <!-- ============================================================= -->
+    <record id="action_zkteco_reprocess_wizard" model="ir.actions.act_window">
+        <field name="name">Reprocess Biometric Logs</field>
+        <field name="res_model">zkteco.attendance.reprocess.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

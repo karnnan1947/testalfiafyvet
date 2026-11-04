@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="purchase_waiver_wizard_view_form" model="ir.ui.view">
+        <field name="name">purchase.waiver.wizard.view.form</field>
+        <field name="model">purchase.waiver.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Waiver Form">
+                <field name="purchase_order_id" invisible="1"/>
+                <div class="alert alert-warning" role="alert">
+                    This request requires approval but currently has fewer
+                    than 3 linked alternative supplier quotations. Select a
+                    waiver category and justify it; both will be sent to the
+                    approver together with the request.
+                </div>
+                <group>
+                    <field name="alternative_po_count" readonly="1"/>
+                </group>
+                <group>
+                    <field name="waiver_category" required="1"/>
+                </group>
+                <group string="Justification">
+                    <field name="justification" required="1"/>
+                </group>
+                <footer>
+                    <button name="action_submit" type="object"
+                            string="Submit &amp; Send for Approval"
+                            class="btn-primary"/>
+                    <button name="action_cancel" type="object"
+                            string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

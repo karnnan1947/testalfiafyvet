@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!--
+            Out-of-the-box attendance policy. Kept as noupdate so administrators
+            can freely rename or retune it without an upgrade reverting changes.
+        -->
+        <record id="policy_device_status_default" model="hr.attendance.policy">
+            <field name="name">Default (Device Status)</field>
+            <field name="mode">device_status</field>
+        </record>
+    </data>
+</odoo>

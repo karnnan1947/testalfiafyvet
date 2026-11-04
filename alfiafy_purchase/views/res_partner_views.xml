@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vendor form > Sales &amp; Purchase tab > Purchase group -->
+    <record id="view_partner_form_alfiafy_purchase" model="ir.ui.view">
+        <field name="name">res.partner.form.alfiafy.purchase</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='purchase']" position="inside">
+                <field name="vendor_sourcing_type" widget="radio"
+                       options="{'horizontal': True}"
+                       readonly="parent_id and not is_company"/>
+                <field name="default_purchase_type" widget="radio"
+                       options="{'horizontal': True}"
+                       readonly="parent_id and not is_company"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_res_partner_filter_alfiafy_purchase" model="ir.ui.view">
+        <field name="name">res.partner.search.alfiafy.purchase</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='inactive']" position="before">
+                <filter string="Official Partners" name="official_partners"
+                        domain="[('vendor_sourcing_type', '=', 'partner')]"/>
+                <filter string="Outside Suppliers" name="outside_suppliers"
+                        domain="[('vendor_sourcing_type', '=', 'outside')]"/>
+                <separator/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- Kanban dashboard                                              -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_biometric_device_kanban" model="ir.ui.view">
+        <field name="name">zkteco.biometric.device.kanban</field>
+        <field name="model">zkteco.biometric.device</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard o_zkteco_device_kanban" sample="1">
+                <field name="state"/>
+                <field name="log_count"/>
+                <field name="pending_command_count"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="fw-bold fs-5">
+                                <field name="device_name"/>
+                            </div>
+                            <span class="badge rounded-pill"
+                                  t-att-class="{
+                                      'online': 'text-bg-success',
+                                      'offline': 'text-bg-danger',
+                                      'confirmed': 'text-bg-info',
+                                      'draft': 'text-bg-secondary',
+                                  }[record.state.raw_value]">
+                                <field name="state"/>
+                            </span>
+                        </div>
+                        <div class="text-muted small mt-1">
+                            <i class="fa fa-barcode me-1" title="Serial Number"/>
+                            <field name="serial_number"/>
+                        </div>
+                        <div class="mt-2 small">
+                            <div t-if="record.ip_address.raw_value">
+                                <i class="fa fa-sitemap me-1" title="IP Address"/>
+                                <field name="ip_address"/>
+                            </div>
+                            <div t-if="record.location.raw_value">
+                                <i class="fa fa-map-marker me-1" title="Location"/>
+                                <field name="location"/>
+                            </div>
+                            <div>
+                                <i class="fa fa-clock-o me-1" title="Last Seen"/>
+                                <t t-if="record.last_seen.raw_value">
+                                    <field name="last_seen" widget="datetime"/>
+                                </t>
+                                <t t-else="">
+                                    <span class="text-muted">Never</span>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center">
+                            <button type="object" name="action_view_logs"
+                                    class="btn btn-sm btn-link p-0">
+                                <i class="fa fa-list-ul me-1" title="Logs"/>
+                                <field name="log_count"/> Logs
+                            </button>
+                            <span t-if="record.pending_command_count.raw_value > 0"
+                                  class="badge text-bg-warning">
+                                <field name="pending_command_count"/> pending
+                            </span>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- List                                                          -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_biometric_device_list" model="ir.ui.view">
+        <field name="name">zkteco.biometric.device.list</field>
+        <field name="model">zkteco.biometric.device</field>
+        <field name="arch" type="xml">
+            <list string="Biometric Devices"
+                  decoration-success="state == 'online'"
+                  decoration-danger="state == 'offline'"
+                  decoration-muted="state == 'draft'">
+                <field name="device_name"/>
+                <field name="serial_number"/>
+                <field name="ip_address" optional="show"/>
+                <field name="location" optional="hide"/>
+                <field name="verify_modes_display" string="Verify Modes"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'online'"
+                       decoration-danger="state == 'offline'"
+                       decoration-info="state == 'confirmed'"
+                       decoration-muted="state == 'draft'"/>
+                <field name="last_seen" optional="show"/>
+                <field name="log_count" string="Logs"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Form                                                          -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_biometric_device_form" model="ir.ui.view">
+        <field name="name">zkteco.biometric.device.form</field>
+        <field name="model">zkteco.biometric.device</field>
+        <field name="arch" type="xml">
+            <form string="Biometric Device">
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_upload_settings" type="object"
+                            string="Push Settings" invisible="state == 'draft'"/>
+                    <button name="action_set_offline" type="object"
+                            string="Mark Offline"
+                            invisible="state not in ('confirmed', 'online')"/>
+                    <button name="action_reset_to_draft" type="object"
+                            string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed,online,offline"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_logs" type="object"
+                                class="oe_stat_button" icon="fa-list-ul">
+                            <field name="log_count" widget="statinfo" string="Logs"/>
+                        </button>
+                        <button name="action_view_commands" type="object"
+                                class="oe_stat_button" icon="fa-terminal">
+                            <field name="command_count" widget="statinfo" string="Commands"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="device_name"/>
+                        <h1>
+                            <field name="device_name" placeholder="e.g. Main Entrance SpeedFace"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Identity">
+                            <field name="serial_number"/>
+                            <field name="location"/>
+                            <field name="tz"/>
+                            <field name="firmware_version"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Security">
+                            <label for="auth_token"/>
+                            <div class="o_row">
+                                <field name="auth_token" widget="password"
+                                       password="True" nolabel="1"
+                                       placeholder="Empty = authenticate by serial number (recommended)"/>
+                                <button name="action_generate_auth_token" type="object"
+                                        string="Generate" class="btn-secondary btn-sm"
+                                        invisible="auth_token"/>
+                                <button name="action_clear_auth_token" type="object"
+                                        string="Clear" class="btn-secondary btn-sm"
+                                        invisible="not auth_token"/>
+                            </div>
+                            <field name="last_seen"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="network" string="Network">
+                            <group>
+                                <group string="Addressing">
+                                    <field name="ip_address"/>
+                                    <field name="mac_address"/>
+                                    <field name="subnet_mask"/>
+                                    <field name="gateway"/>
+                                    <field name="port"/>
+                                </group>
+                                <group string="Push Timing">
+                                    <field name="transaction_interval"/>
+                                    <field name="heartbeat_interval"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page name="verify_modes" string="Verify Modes">
+                            <group>
+                                <group string="Enabled Verification Methods">
+                                    <field name="verify_mode_face"/>
+                                    <field name="verify_mode_fingerprint"/>
+                                    <field name="verify_mode_palm"/>
+                                </group>
+                                <group>
+                                    <field name="verify_modes_display"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page name="setup_guidance" string="Setup Guidance">
+                            <div class="alert alert-info" role="status" name="device_setup_help">
+                                <h4 class="alert-heading" role="status">
+                                    <i class="fa fa-info-circle me-1"/>
+                                    Configure the device to push to Odoo (SpeedFace-V5L)
+                                </h4>
+                                <p>
+                                    On the terminal keypad, register this Odoo server as the
+                                    ADMS (cloud) target so the device pushes attendance to Odoo:
+                                </p>
+                                <ol>
+                                    <li>Open <b>Menu &gt; Comm. &gt; Cloud Server Setting (ADMS)</b>.</li>
+                                    <li>Set <b>Server Mode</b> to <b>ADMS</b> (or <b>Domain Name</b>).</li>
+                                    <li>Enter the Odoo <b>Server Address / Domain Name</b>
+                                        (this server's public IP or domain).</li>
+                                    <li>Set <b>Server Port</b> to <b>8069</b> (plain HTTP) or
+                                        <b>443</b> (HTTPS).</li>
+                                    <li>Enable <b>Enable Domain Name / HTTPS</b> when using port
+                                        <b>443</b> (a valid TLS certificate is required).</li>
+                                    <li>Under <b>Menu &gt; Comm. &gt; Ethernet</b>, choose
+                                        <b>DHCP</b> or set a <b>Static IP</b>, subnet mask and
+                                        gateway that can reach the Odoo server.</li>
+                                    <li>Save and reboot; the device will handshake on
+                                        <code>/iclock/cdata</code> and appear <b>Online</b> here.</li>
+                                </ol>
+                                <hr/>
+                                <p class="mb-1">
+                                    <b>Cross-check against this registered device:</b>
+                                </p>
+                                <ul class="mb-0">
+                                    <li>Serial Number (must match the terminal exactly):
+                                        <b><field name="serial_number" nolabel="1" readonly="1"/></b></li>
+                                    <li>Server Port configured here:
+                                        <b><field name="port" nolabel="1" readonly="1"/></b></li>
+                                    <li>Current registration state:
+                                        <b><field name="state" nolabel="1" readonly="1"/></b></li>
+                                </ul>
+                            </div>
+                        </page>
+                        <page name="device_info" string="Device Info">
+                            <group>
+                                <group string="Reported by the device">
+                                    <field name="device_user_count"/>
+                                    <field name="device_fp_count"/>
+                                    <field name="device_face_count"/>
+                                    <field name="device_transaction_count"/>
+                                    <field name="last_info_date"/>
+                                </group>
+                            </group>
+                            <div class="text-muted mb-2">
+                                Populated when a <b>Query Info</b> (INFO) command runs. The
+                                firmware version appears in the Identity panel above. If a value
+                                is blank, the full device response is shown below.
+                            </div>
+                            <separator string="Raw device response"/>
+                            <field name="last_info_raw" nolabel="1" readonly="1"/>
+                        </page>
+                        <page name="commands" string="Commands">
+                            <field name="command_ids">
+                                <list string="Commands" create="false"
+                                      decoration-muted="state == 'done'"
+                                      decoration-warning="state == 'pending'"
+                                      decoration-info="state == 'sent'"
+                                      decoration-danger="state == 'error'">
+                                    <field name="create_date" string="Queued"/>
+                                    <field name="command_type"/>
+                                    <field name="command_text"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'done'"
+                                           decoration-danger="state == 'error'"
+                                           decoration-info="state == 'sent'"
+                                           decoration-warning="state == 'pending'"/>
+                                    <field name="sent_date"/>
+                                    <field name="ack_date"/>
+                                    <field name="return_code"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="logs" string="Logs">
+                            <field name="log_ids" readonly="1">
+                                <list string="Attendance Logs" create="false" edit="false">
+                                    <field name="punch_datetime"/>
+                                    <field name="biometric_user_id"/>
+                                    <field name="employee_id"/>
+                                    <field name="punch_type"/>
+                                    <field name="verify_mode"/>
+                                    <field name="process_state" widget="badge"
+                                           decoration-success="process_state == 'done'"
+                                           decoration-warning="process_state == 'unmatched'"
+                                           decoration-danger="process_state == 'error'"
+                                           decoration-muted="process_state in ('duplicate', 'skipped')"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Search                                                        -->
+    <!-- ============================================================= -->
+    <record id="view_zkteco_biometric_device_search" model="ir.ui.view">
+        <field name="name">zkteco.biometric.device.search</field>
+        <field name="model">zkteco.biometric.device</field>
+        <field name="arch" type="xml">
+            <search string="Biometric Devices">
+                <field name="device_name"/>
+                <field name="serial_number"/>
+                <field name="ip_address"/>
+                <field name="location"/>
+                <filter name="filter_online" string="Online"
+                        domain="[('state', '=', 'online')]"/>
+                <filter name="filter_offline" string="Offline"
+                        domain="[('state', '=', 'offline')]"/>
+                <filter name="filter_confirmed" string="Confirmed"
+                        domain="[('state', '=', 'confirmed')]"/>
+                <filter name="filter_draft" string="Draft"
+                        domain="[('state', '=', 'draft')]"/>
+                <group>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_company" string="Company"
+                            context="{'group_by': 'company_id'}"/>
+                    <filter name="group_location" string="Location"
+                            context="{'group_by': 'location'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- Action                                                        -->
+    <!-- ============================================================= -->
+    <record id="action_zkteco_biometric_device" model="ir.actions.act_window">
+        <field name="name">Biometric Devices</field>
+        <field name="res_model">zkteco.biometric.device</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_zkteco_biometric_device_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register your first ZKTeco biometric device
+            </p>
+            <p>
+                Register a device with its serial number, confirm it to generate an
+                authentication token, then configure the terminal to push attendance
+                to this Odoo server over the ADMS / iClock protocol.
+            </p>
+        </field>
+    </record>
+
+</odoo>
