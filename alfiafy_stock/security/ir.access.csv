@@ -1,0 +1,3 @@
+id,name,model_id,group_id/id,operation,domain
+access_stock_quant_branch_user,stock.quant branch users (all branches),stock.quant,stock.group_stock_user,r,
+access_stock_location_branch_user,stock.location branch users (all branches),stock.location,stock.group_stock_user,r,

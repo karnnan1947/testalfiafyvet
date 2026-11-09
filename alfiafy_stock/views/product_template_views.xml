@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_alfiafy_stock" model="ir.ui.view">
+        <field name="name">product.template.form.alfiafy.stock</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="stock.product_template_form_view_stock"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='inventory']" position="inside">
+                <group string="Branch Stock Controls" name="alfiafy_branch_controls">
+                    <group>
+                        <field name="max_transfer_qty"/>
+                        <field name="expiry_alert_days"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

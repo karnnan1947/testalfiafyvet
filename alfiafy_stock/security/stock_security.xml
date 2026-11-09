@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Stock disposal (scrap) restricted to the Stock Manager -->
+    <record id="stock.stock_scrapped_moves_action" model="ir.actions.act_window">
+        <field name="group_ids" eval="[Command.set([ref('stock.group_stock_manager')])]"/>
+    </record>
+    <record id="stock.action_scrap_picking" model="ir.actions.server">
+        <field name="group_ids" eval="[Command.set([ref('stock.group_stock_manager')])]"/>
+    </record>
+    <record id="stock.action_scrap_lot" model="ir.actions.server">
+        <field name="group_ids" eval="[Command.set([ref('stock.group_stock_manager')])]"/>
+    </record>
+    <record id="stock.menu_stock_scrap" model="ir.ui.menu">
+        <field name="group_ids" eval="[Command.set([ref('stock.group_stock_manager')])]"/>
+    </record>
+</odoo>

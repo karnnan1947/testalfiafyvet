@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_alfiafy_stock" model="ir.ui.view">
+        <field name="name">stock.picking.form.alfiafy.stock</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='action_confirm']" position="before">
+                <button name="action_approve_transfer" string="Approve" type="object" class="oe_highlight"
+                        groups="stock.group_stock_user"
+                        invisible="picking_type_code != 'internal' or transfer_status != 'draft' or state in ('done', 'cancel')"/>
+                <button name="action_dispatch_goods" string="Dispatch Goods" type="object" class="oe_highlight"
+                        groups="stock.group_stock_user"
+                        invisible="picking_type_code != 'internal' or transfer_status != 'approved' or state in ('done', 'cancel')"/>
+                <button name="action_confirm_receipt" string="Confirm Receipt" type="object" class="oe_highlight"
+                        groups="stock.group_stock_user"
+                        invisible="picking_type_code != 'internal' or transfer_status != 'transit' or state in ('done', 'cancel')"/>
+            </xpath>
+            <!-- internal transfers: transfer status bar instead of the standard one (except when cancelled) -->
+            <xpath expr="//header/field[@name='state'][2]" position="attributes">
+                <attribute name="invisible">picking_type_code == 'incoming' or (picking_type_code == 'internal' and state != 'cancel')</attribute>
+            </xpath>
+            <xpath expr="//header/field[@name='state'][2]" position="after">
+                <field name="transfer_status" widget="statusbar" statusbar_visible="draft,approved,transit,done"
+                       invisible="picking_type_code != 'internal' or state == 'cancel'"/>
+            </xpath>
+            <xpath expr="//div[hasclass('alert-info')][field[@name='picking_warning_text']]" position="before">
+                <div class="alert alert-danger" role="alert" invisible="not is_delayed">
+                    In transit for more than 48 hours: the receiving branch has not confirmed the receipt yet.
+                </div>
+            </xpath>
+            <field name="origin" position="before">
+                <field name="dispatch_date" invisible="picking_type_code != 'internal' or not dispatch_date"/>
+                <field name="is_delayed" invisible="1"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="vpicktree_alfiafy_stock" model="ir.ui.view">
+        <field name="name">stock.picking.list.alfiafy.stock</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <field name="state" position="before">
+                <field name="is_delayed" column_invisible="True"/>
+                <field name="transfer_status" optional="show" widget="badge"
+                       invisible="picking_type_code != 'internal'"
+                       decoration-muted="transfer_status == 'draft'"
+                       decoration-info="transfer_status == 'approved'"
+                       decoration-warning="transfer_status == 'transit' and not is_delayed"
+                       decoration-danger="is_delayed"
+                       decoration-success="transfer_status == 'done'"/>
+                <field name="dispatch_date" optional="hide"/>
+            </field>
+        </field>
+    </record>
+</odoo>
