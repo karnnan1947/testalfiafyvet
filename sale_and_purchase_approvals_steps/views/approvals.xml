@@ -21,22 +21,14 @@
                     <field name="amount_value"
                            invisible="type == 'sale' and sale_criteria_type == 'margin'"
                            required="type in ('purchase', 'delivery') or (type == 'sale' and sale_criteria_type != 'margin')"/>
-                    <field name="amount_base"
-                           invisible="type == 'sale' and sale_criteria_type == 'margin'"/>
+                    <field name="amount_base" column_invisible="1"/>
 
-                    <field name="logic_operator"
-                           invisible="type != 'sale' or sale_criteria_type != 'both'"
-                           required="type == 'sale' and sale_criteria_type == 'both'"/>
+                    <field name="logic_operator" column_invisible="1"/>
+                    <field name="margin_operator" column_invisible="1"/>
+                    <field name="margin_value" column_invisible="1"/>
 
-                    <field name="margin_operator"
-                           invisible="type != 'sale' or sale_criteria_type == 'amount'"
-                           required="type == 'sale' and sale_criteria_type != 'amount'"/>
-                    <field name="margin_value"
-                           invisible="type != 'sale' or sale_criteria_type == 'amount'"
-                           required="type == 'sale' and sale_criteria_type != 'amount'"/>
-
-                    <!-- Waiver Mechanism: Purchase steps only -->
-                    <field name="waiver_mechanism" readonly="type != 'purchase'" invisible="type != 'purchase'"/>
+                    <!-- Waiver Mechanism (Not in BRD - hidden) -->
+                    <field name="waiver_mechanism" column_invisible="1"/>
 
                     <!-- Exactly what this step evaluates, spelled out, so a
                          step that can never match is obvious at a glance. -->

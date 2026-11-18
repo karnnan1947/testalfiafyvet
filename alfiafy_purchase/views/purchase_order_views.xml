@@ -46,16 +46,16 @@
                       invisible="purchase_type != 'import'">
                     <group>
                         <group string="Shipment">
-                            <field name="shipment_status"/>
-                            <field name="shipping_line"/>
+                            <field name="shipment_status" invisible="1"/>
+                            <field name="shipping_line" invisible="1"/>
                             <field name="container_no"/>
                             <field name="bl_awb_no"/>
                             <field name="tracking_no"/>
                         </group>
-                        <group string="Schedule">
-                            <field name="port_of_entry"/>
-                            <field name="etd"/>
-                            <field name="eta"/>
+                        <group string="Schedule" invisible="1">
+                            <field name="port_of_entry" invisible="1"/>
+                            <field name="etd" invisible="1"/>
+                            <field name="eta" invisible="1"/>
                         </group>
                     </group>
                 </page>

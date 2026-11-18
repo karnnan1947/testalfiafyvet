@@ -18,19 +18,18 @@
                     <group>
                         <group string="Classification" name="alfiafy_classification">
                             <field name="vet_item_type"/>
-                            <field name="active_ingredient" placeholder="e.g. Ivermectin"/>
-                            <field name="target_species_ids" widget="many2many_tags"
-                                   options="{'color_field': 'color', 'no_create_edit': True}"/>
-                            <field name="dosage_form"/>
-                            <field name="strength" placeholder="e.g. 1% w/v"/>
+                            <field name="active_ingredient" invisible="1"/>
+                            <field name="target_species_ids" invisible="1"/>
+                            <field name="dosage_form" invisible="1"/>
+                            <field name="strength" invisible="1"/>
                         </group>
                         <group string="Source and Handling" name="alfiafy_source">
                             <field name="manufacturer_id"
                                    context="{'default_is_company': True}"/>
                             <field name="supplier_id"
                                    context="{'default_is_company': True, 'res_partner_search_mode': 'supplier'}"/>
-                            <field name="storage_condition"/>
-                            <field name="prescription_required"/>
+                            <field name="storage_condition" invisible="1"/>
+                            <field name="prescription_required" invisible="1"/>
                         </group>
                     </group>
                     <group string="Arabic Description" name="alfiafy_description_ar">
@@ -71,7 +70,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
                 <field name="name_ar" optional="hide"/>
-                <field name="active_ingredient" optional="show"/>
+                <field name="active_ingredient" optional="hide"/>
                 <field name="manufacturer_id" optional="show"/>
                 <field name="supplier_id" optional="hide"/>
             </xpath>
@@ -85,7 +84,7 @@
         <field name="inherit_id" ref="product.product_product_tree_view"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
-                <field name="active_ingredient" optional="show"/>
+                <field name="active_ingredient" optional="hide"/>
                 <field name="manufacturer_id" optional="show"/>
                 <field name="supplier_id" optional="hide"/>
             </xpath>

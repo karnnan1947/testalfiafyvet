@@ -21,13 +21,13 @@
                       invisible="purchase_type != 'import'">
                     <group>
                         <group>
-                            <field name="po_shipment_status"/>
+                            <field name="po_shipment_status" invisible="1"/>
                             <field name="po_container_no"/>
                             <field name="po_bl_awb_no"/>
                         </group>
-                        <group>
-                            <field name="po_etd"/>
-                            <field name="po_eta"/>
+                        <group invisible="1">
+                            <field name="po_etd" invisible="1"/>
+                            <field name="po_eta" invisible="1"/>
                         </group>
                     </group>
                 </page>
