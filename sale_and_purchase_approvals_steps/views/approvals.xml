@@ -9,17 +9,22 @@
                     <field name="type"/>
                     <field name="sequence"/>
                     <field name="user_id"/>
+                    <!-- Internal Transfer steps only: blank = every internal transfer -->
+                    <field name="warehouse_id" optional="show"
+                           invisible="type != 'internal_transfer'"
+                           options="{'no_create': True}"/>
 
                     <!-- Dynamic Sale Condition Builder (Sale only) -->
                     <field name="sale_criteria_type" invisible="type != 'sale'" required="type == 'sale'"/>
 
                     <!-- Amount Operator / Value: used by both Sale (when criteria includes
-                         amount) and Purchase (always) -->
+                         amount) and Purchase (always). Internal transfers need
+                         approval whatever their value, so no amount there. -->
                     <field name="amount_operator"
-                           invisible="type == 'sale' and sale_criteria_type == 'margin'"
+                           invisible="type == 'internal_transfer' or (type == 'sale' and sale_criteria_type == 'margin')"
                            required="type in ('purchase', 'delivery') or (type == 'sale' and sale_criteria_type != 'margin')"/>
                     <field name="amount_value"
-                           invisible="type == 'sale' and sale_criteria_type == 'margin'"
+                           invisible="type == 'internal_transfer' or (type == 'sale' and sale_criteria_type == 'margin')"
                            required="type in ('purchase', 'delivery') or (type == 'sale' and sale_criteria_type != 'margin')"/>
                     <field name="amount_base" column_invisible="1"/>
 

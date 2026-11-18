@@ -22,7 +22,21 @@ class ApprovalSteps(models.Model):
     # list reads the way the approvals actually run.
     _order = 'type, sequence, id'
 
-    type = fields.Selection([('sale', 'Sale'),('purchase', 'Purchase'),('delivery', 'Delivery'),], string='Type', required=True)
+    type = fields.Selection([
+        ('sale', 'Sale'),
+        ('purchase', 'Purchase'),
+        ('delivery', 'Delivery'),
+        ('internal_transfer', 'Internal Transfer'),
+    ], string='Type', required=True)
+    # Internal Transfer steps only: limit the step to transfers dispatched from
+    # this warehouse (the transfer's source location). Blank = every internal
+    # transfer of the company, whatever its value.
+    warehouse_id = fields.Many2one(
+        'stock.warehouse', string='Source Warehouse',
+        domain="[('company_id', '=', company_id)]",
+        help="Internal Transfer steps only: the step applies to transfers "
+             "leaving this warehouse. Leave empty to apply it to every "
+             "internal transfer.")
     # Must be 1 or more. 0 is reserved: it is the value an order carries when
     # it is not in an approval chain at all, so a step numbered 0 could never
     # be told apart from "no approval in progress".
@@ -103,6 +117,8 @@ class ApprovalSteps(models.Model):
         for rec in self:
             if rec.type != 'purchase':
                 rec.waiver_mechanism = False
+            if rec.type != 'internal_transfer':
+                rec.warehouse_id = False
 
     @api.depends('company_id.currency_id')
     def _compute_currency(self):
@@ -153,6 +169,10 @@ class ApprovalSteps(models.Model):
                      'margin_operator', 'margin_value', 'logic_operator')
     def _check_sale_criteria_required(self):
         for rec in self:
+            # Internal transfers need approval whatever their value: no
+            # Amount condition (optionally narrowed by Source Warehouse).
+            if rec.type == 'internal_transfer':
+                continue
             if rec.type in ('purchase', 'delivery'):
                 if not rec.amount_operator:
                     raise ValidationError(_("Please select an Amount operator."))
@@ -226,6 +246,15 @@ class ApprovalSteps(models.Model):
         amount = self._order_amount(sale_order, date=sale_order.date_order)
         return OPERATOR_FUNCS[self.amount_operator](amount, self.amount_value)
 
+    def _matches_internal_transfer(self, picking):
+        """Return True if this Internal Transfer step applies to the given
+        stock.picking: every internal transfer, or only the ones leaving the
+        step's Source Warehouse when one is set."""
+        self.ensure_one()
+        if self.type != 'internal_transfer' or picking.picking_type_code != 'internal':
+            return False
+        return not self.warehouse_id or picking.location_id.warehouse_id == self.warehouse_id
+
     # ------------------------------------------------------------------
     # Human readable condition
     # ------------------------------------------------------------------
@@ -236,7 +265,7 @@ class ApprovalSteps(models.Model):
 
     @api.depends('type', 'sale_criteria_type', 'amount_operator', 'amount_value',
                  'amount_base', 'logic_operator', 'margin_operator',
-                 'margin_value', 'currency_id')
+                 'margin_value', 'currency_id', 'warehouse_id')
     def _compute_condition_display(self):
         for step in self:
             step.condition_display = step._condition_display()
@@ -265,6 +294,11 @@ class ApprovalSteps(models.Model):
                 'op': self.margin_operator or '?',
                 'value': self.margin_value,
             }
+
+        if self.type == 'internal_transfer':
+            if self.warehouse_id:
+                return _("Internal Transfers from %s", self.warehouse_id.name)
+            return _("All Internal Transfers")
 
         if self.type != 'sale':
             return amount_part()

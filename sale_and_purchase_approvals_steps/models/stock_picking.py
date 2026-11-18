@@ -4,6 +4,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import AccessError, UserError
 
 from .approvals import (
+    APPROVAL_ACTIVITY_XMLID,
     APPROVAL_GROUP_XMLID,
     approver_names,
     check_approval_cancel_allowed,
@@ -40,6 +41,14 @@ class StockPicking(models.Model):
         ('cancelled', 'Cancelled'),
     ], string='Approval Status', copy=False, readonly=True, tracking=True)
     approval_step_sequence = fields.Integer(string='Approval Step Sequence', default=0, copy=False)
+    # Internal transfers enter their approval chain through an explicit
+    # "Submit for Approval" (Validate is not the trigger, as it is for
+    # deliveries), so the form needs to know when to offer it.
+    can_submit_internal_approval = fields.Boolean(
+        string='Can Submit for Approval',
+        compute='_compute_can_submit_internal_approval',
+        help="Internal transfer matched by an Internal Transfer approval step "
+             "and not yet submitted or approved.")
 
     @api.depends('approval_status')
     def _compute_state(self):
@@ -75,7 +84,7 @@ class StockPicking(models.Model):
         A transfer waiting for approval must not offer Validate at all."""
         super()._compute_validate_button_style()
         for picking in self:
-            if picking.state == 'to_approve':
+            if picking.state == 'to_approve' or picking._needs_internal_transfer_approval():
                 picking.validate_button_style = 'invisible'
 
     def _get_matching_delivery_steps(self):
@@ -89,15 +98,41 @@ class StockPicking(models.Model):
         ], order='sequence asc')
         return all_steps.filtered(lambda step: step._matches_delivery_order(self))
 
+    def _get_matching_internal_transfer_steps(self):
+        """Return, in sequence order, the configured 'internal_transfer'
+        approval steps that apply to this transfer: every internal transfer,
+        or only the ones leaving the step's Source Warehouse."""
+        self.ensure_one()
+        if self.picking_type_code != 'internal':
+            return self.env['approval.steps']
+        all_steps = self.env['approval.steps'].search([
+            ('company_id', '=', self.company_id.id),
+            ('type', '=', 'internal_transfer'),
+        ], order='sequence asc')
+        return all_steps.filtered(lambda step: step._matches_internal_transfer(self))
+
     @api.depends('state', 'approval_step_sequence')
+    @api.depends_context('uid')
     def _compute_show_approve_button(self):
+        is_admin = self.env.user.has_group(APPROVAL_GROUP_XMLID)
         for picking in self:
-            steps = picking._get_matching_delivery_steps().filtered(
+            if picking.state != 'to_approve':
+                picking.show_approve_button = False
+                continue
+            steps = picking._approval_matching_steps().filtered(
                 lambda step: step.sequence == picking.approval_step_sequence
             )
-            user_ids = steps.mapped('user_id').ids
-            is_admin = self.env.user.has_group(APPROVAL_GROUP_XMLID)
-            picking.show_approve_button = picking.state == 'to_approve' and (self.env.uid in user_ids or is_admin)
+            picking.show_approve_button = self.env.uid in steps.mapped('user_id').ids or is_admin
+
+    @api.depends('state', 'approval_status', 'picking_type_code', 'location_id')
+    def _compute_can_submit_internal_approval(self):
+        for picking in self:
+            picking.can_submit_internal_approval = (
+                picking.picking_type_code == 'internal'
+                and picking.state not in ('done', 'cancel', 'to_approve')
+                and picking.approval_status not in ('to_approve', 'approved')
+                and bool(picking._get_matching_internal_transfer_steps())
+            )
 
     def _search_show_approve_button(self, operator, value):
         return search_show_approve_button(self, operator, value)
@@ -120,6 +155,21 @@ class StockPicking(models.Model):
             return False
         return bool(self._get_matching_delivery_steps())
 
+    def _needs_internal_transfer_approval(self):
+        """Whether this internal transfer still has to clear its approval
+        chain before it may be validated.
+
+        Validate does not start the chain for an internal transfer (Submit for
+        Approval does): it is simply refused until the chain is approved, so
+        nobody moves stock into another location on their own say-so.
+        """
+        self.ensure_one()
+        if self.picking_type_code != 'internal' or self.state in ('done', 'cancel'):
+            return False
+        if self.approval_status == 'approved':
+            return False
+        return bool(self._get_matching_internal_transfer_steps())
+
     def button_validate(self):
         # Reachable over RPC, and until the view fix also from a leaked
         # Validate button. Restarting the chain here would reset
@@ -131,6 +181,13 @@ class StockPicking(models.Model):
                 "The following transfer(s) are waiting for approval and "
                 "cannot be validated yet:\n\n%s"
             ) % '\n'.join('- %s' % rec.display_name for rec in awaiting))
+
+        unapproved = self.filtered(lambda p: p._needs_internal_transfer_approval())
+        if unapproved:
+            raise UserError(_(
+                "The following internal transfer(s) must be submitted for "
+                "approval and approved before they can be validated:\n\n%s"
+            ) % '\n'.join('- %s' % rec.display_name for rec in unapproved))
 
         to_approve = self.filtered(lambda p: p._needs_delivery_approval())
 
@@ -152,6 +209,58 @@ class StockPicking(models.Model):
         to_validate = self - to_approve
         if to_validate:
             return self._delivery_super_validate(to_validate)
+        return True
+
+    def action_submit_internal_transfer_approval(self):
+        """Send an internal transfer into its approval chain ("To Approve").
+
+        Same chain mechanics as purchase and sale orders: the approvers on the
+        lowest matching sequence are notified, any one of them approves that
+        step, and each higher sequence follows in turn.
+        """
+        for picking in self:
+            if picking.picking_type_code != 'internal':
+                raise UserError(_("%s is not an internal transfer.") % picking.display_name)
+            if picking.state in ('done', 'cancel'):
+                raise UserError(_("%s is already done or cancelled.") % picking.display_name)
+            if picking.state == 'to_approve' or picking.approval_status == 'to_approve':
+                raise UserError(_("%s is already waiting for approval.") % picking.display_name)
+            if picking.approval_status == 'approved':
+                raise UserError(_("%s is already approved.") % picking.display_name)
+            if not picking.move_ids:
+                raise UserError(_("Add the products to transfer before submitting %s for approval.")
+                                % picking.display_name)
+            steps = picking._get_matching_internal_transfer_steps()
+            if not steps:
+                raise UserError(_(
+                    "No Internal Transfer approval step applies to %s. Configure "
+                    "one under Settings > Technical > Approval Management > "
+                    "Approval Steps."
+                ) % picking.display_name)
+
+            # The request is final once it goes out for approval: confirm the
+            # draft moves so the approver sees the demand that will be moved.
+            if picking.state == 'draft':
+                res = picking.action_confirm()
+                if isinstance(res, dict):
+                    # e.g. the zero-demand wizard: answer it, then submit again.
+                    return res
+
+            first_sequence = min(steps.mapped('sequence'))
+            picking.write({
+                'state': 'to_approve',
+                'approval_status': 'to_approve',
+                'approval_step_sequence': first_sequence,
+            })
+            first_steps = steps.filtered(lambda s: s.sequence == first_sequence)
+            notify_approvers(picking, first_steps.mapped('user_id'))
+            picking.message_post(body=Markup(_(
+                "Submitted for approval by %(user)s. Waiting for "
+                "<b>%(approvers)s</b>."
+            )) % {
+                'user': self.env.user.display_name,
+                'approvers': approver_names(first_steps),
+            })
         return True
 
     def _delivery_super_validate(self, pickings):
@@ -181,6 +290,9 @@ class StockPicking(models.Model):
         back an Activity for the requester to act on. Delivery was the odd one
         out.
         """
+        if picking.picking_type_code == 'internal':
+            self._finish_internal_transfer_approval(picking)
+            return
         picking.write({'state': 'assigned', 'approval_status': 'approved'})
         close_approval_activities(picking)
         picking.message_post(body=_(
@@ -202,9 +314,43 @@ class StockPicking(models.Model):
             },
         )
 
+    def _finish_internal_transfer_approval(self, picking):
+        """Final approval of an internal transfer.
+
+        Only the approval status is written: the picking state then recomputes
+        from its moves (Waiting / Ready) instead of being forced to Ready while
+        the goods may not be reserved yet.
+        """
+        picking.write({'approval_status': 'approved'})
+        close_approval_activities(picking)
+        picking.message_post(body=_(
+            "Internal transfer approved by %s."
+        ) % self.env.user.display_name)
+        summary, note, user = picking._internal_transfer_approved_activity()
+        if user:
+            picking.activity_schedule(
+                APPROVAL_ACTIVITY_XMLID, user_id=user.id, summary=summary, note=note)
+        notify_requester(picking, Markup(_(
+            "Approved by <b>%(approver)s</b>. The approval chain is complete."
+        )) % {'approver': self.env.user.display_name})
+
+    def _internal_transfer_approved_activity(self):
+        """(summary, note, user) of the follow-up Activity scheduled once an
+        internal transfer is fully approved. Modules that add a dispatch step
+        on top of the transfer override this."""
+        self.ensure_one()
+        return (
+            _("Approved - Validate the Transfer"),
+            Markup(_(
+                "%(record)s is fully approved (final approval by "
+                "%(approver)s).<br/>Click Validate to complete the transfer."
+            )) % {'record': self.display_name, 'approver': self.env.user.display_name},
+            self._approval_requester(),
+        )
+
     def button_approve_delivery(self):
         for picking in self:
-            steps = picking._get_matching_delivery_steps()
+            steps = picking._approval_matching_steps()
             # Authorisation is enforced here, not only by hiding the button.
             is_admin = check_approver_allowed(picking, steps)
 
@@ -227,6 +373,10 @@ class StockPicking(models.Model):
                 next_steps = remaining.filtered(
                     lambda step: step.sequence == next_sequence
                 )
+                # Parallel approvers on the step just approved no longer have
+                # anything to do: drop their pending Approval activities.
+                for user in current_approvers(picking) - self.env.user:
+                    picking.activity_unlink([APPROVAL_ACTIVITY_XMLID], user_id=user.id)
                 picking.write({
                     'state': 'to_approve',
                     'approval_step_sequence': next_sequence,
@@ -272,6 +422,9 @@ class StockPicking(models.Model):
     def _approval_matching_steps(self):
         """Uniform accessor so the shared approval helpers can find this
         model's steps without knowing which document type it is."""
+        self.ensure_one()
+        if self.picking_type_code == 'internal':
+            return self._get_matching_internal_transfer_steps()
         return self._get_matching_delivery_steps()
 
     def _approval_cancel(self, reason):

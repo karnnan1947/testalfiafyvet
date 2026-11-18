@@ -6,6 +6,13 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
+                <!-- Internal transfers: the requester sends the transfer into
+                     its Internal Transfer approval chain. -->
+                <button name="action_submit_internal_transfer_approval"
+                        string="Submit for Approval" type="object" class="oe_highlight"
+                        groups="stock.group_stock_user"
+                        invisible="not can_submit_internal_approval"/>
+                <field name="can_submit_internal_approval" invisible="1"/>
                 <button name="button_approve_delivery" string="Approve"
                         type="object" class="oe_highlight"
                         groups="base.group_user"

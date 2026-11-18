@@ -43,6 +43,8 @@ class TestAlfiafyStock(TransactionCase):
         Quant = cls.env['stock.quant']
         Quant._update_available_quantity(cls.product, cls.main_wh.lot_stock_id, 100)
         Quant._update_available_quantity(cls.product, cls.branch1.lot_stock_id, 30)
+        # tests 1-8: direct storekeeper approval (no Internal Transfer approval step)
+        cls.env['approval.steps'].search([('type', '=', 'internal_transfer')]).unlink()
 
     def _transfer(self, user, source_wh, dest_wh, qty, product=None):
         product = product or self.product
@@ -213,3 +215,126 @@ class TestAlfiafyStock(TransactionCase):
         self.assertTrue(Quant.search([('location_id', '=', self.main_wh.lot_stock_id.id)]))
         with self.assertRaises(AccessError):
             self.env['product.value'].with_user(self.branch2_user).search([], limit=1)
+
+    # 9-13. Internal Transfer approval steps (sale_and_purchase_approvals_steps)
+    def _internal_steps(self, *rows):
+        return self.env['approval.steps'].create([
+            {'type': 'internal_transfer', 'sequence': seq, 'user_id': user.id,
+             'warehouse_id': warehouse.id if warehouse else False}
+            for seq, user, warehouse in rows])
+
+    def _ops_manager(self):
+        """An approver who is neither a Stock Manager nor a user of the dispatching warehouse."""
+        return self.env['res.users'].with_context(no_reset_password=True).create({
+            'name': 'Operations Manager (test)', 'login': 't_ops_manager', 'email': 't_ops_manager@example.com',
+            'group_ids': [Command.set([self.env.ref('base.group_user').id,
+                                      self.env.ref('stock.group_stock_user').id])],
+            'property_warehouse_id': self.branch2.id,
+        })
+
+    def _approval_required(self, picking):
+        return picking.activity_ids.filtered(lambda a: a.summary == 'Approval Required')
+
+    def test_09_approval_steps_sequence_chain(self):
+        ops = self._ops_manager()
+        self._internal_steps((10, self.storekeeper, None), (20, ops, None))
+        picking = self._transfer(self.branch1_user, self.main_wh, self.branch1, 20).with_env(self.env)
+        self.assertTrue(picking.internal_approval_required)
+        self.assertTrue(picking.with_user(self.branch1_user).can_submit_internal_approval)
+        with self.assertRaisesRegex(UserError, 'Approve'):
+            picking.with_user(self.storekeeper).action_dispatch_goods()
+        with self.assertRaisesRegex(UserError, 'cannot be validated directly'):
+            picking.with_user(self.storekeeper).button_validate()
+
+        picking.with_user(self.branch1_user).action_submit_internal_transfer_approval()
+        self.assertEqual((picking.state, picking.transfer_status, picking.approval_step_sequence),
+                         ('to_approve', 'to_approve', 10))
+        self.assertEqual(self._approval_required(picking).user_id, self.storekeeper)
+        for user in (self.branch1_user, ops):
+            with self.assertRaises(AccessError):
+                picking.with_user(user).button_approve_delivery()
+        with self.assertRaises(UserError):
+            picking.with_user(self.storekeeper).button_validate()
+        with self.assertRaises(UserError):
+            picking.with_user(self.storekeeper).action_dispatch_goods()
+
+        picking.with_user(self.storekeeper).button_approve_delivery()
+        self.assertEqual((picking.transfer_status, picking.approval_step_sequence), ('to_approve', 20))
+        self.assertEqual(self._approval_required(picking).user_id, ops)
+        self.assertIn(picking, self.env['stock.picking'].with_user(ops).search([('show_approve_button', '=', True)]))
+
+        picking.with_user(ops).button_approve_delivery()
+        self.assertEqual((picking.approval_status, picking.transfer_status), ('approved', 'approved'))
+        self.assertNotEqual(picking.state, 'to_approve')
+        self.assertFalse(self._approval_required(picking))
+        follow_up = picking.activity_ids.filtered(lambda a: a.summary == 'Approved - Dispatch Goods')
+        self.assertEqual(follow_up.user_id, ops)
+        # the approver may dispatch; the requesting branch may not
+        self.assertTrue(picking.with_user(ops).can_dispatch_transfer)
+        self.assertFalse(picking.with_user(self.branch1_user).can_dispatch_transfer)
+
+        picking.with_user(self.storekeeper).action_dispatch_goods()
+        self.assertEqual(picking.transfer_status, 'transit')
+        self.assertTrue(picking.dispatch_date)
+        picking.with_user(self.branch1_user).action_confirm_receipt()
+        self.assertEqual((picking.transfer_status, picking.state), ('done', 'done'))
+        self.assertEqual(self._qty(self.branch1), 50)
+        self.assertEqual(self._qty(self.main_wh), 80)
+
+    def test_10_parallel_approvers(self):
+        ops = self._ops_manager()
+        self._internal_steps((10, self.storekeeper, None), (10, ops, None))
+        picking = self._transfer(self.branch1_user, self.main_wh, self.branch1, 5).with_env(self.env)
+        picking.with_user(self.branch1_user).action_submit_internal_transfer_approval()
+        self.assertEqual(self._approval_required(picking).user_id, self.storekeeper | ops)
+        # either of them approves; the other one's pending approval goes away
+        picking.with_user(ops).button_approve_delivery()
+        self.assertEqual((picking.approval_status, picking.transfer_status), ('approved', 'approved'))
+        self.assertFalse(self._approval_required(picking))
+
+    def test_11_rejection_reason(self):
+        self._internal_steps((10, self.storekeeper, None))
+        picking = self._transfer(self.branch1_user, self.main_wh, self.branch1, 5).with_env(self.env)
+        picking.with_user(self.branch1_user).action_submit_internal_transfer_approval()
+        action = picking.with_user(self.storekeeper).action_cancel()
+        self.assertEqual(action['res_model'], 'approval.cancel.wizard')
+        wizard = self.env['approval.cancel.wizard'].with_user(self.storekeeper).with_context(
+            action['context']).create({'reason': 'Not enough stock for the main store'})
+        wizard.action_confirm_cancel()
+        self.assertEqual((picking.state, picking.approval_status, picking.transfer_status),
+                         ('cancel', 'cancelled', 'draft'))
+        self.assertTrue(any('Not enough stock for the main store' in (m.body or '') for m in picking.message_ids))
+
+    def test_12_source_warehouse_filter(self):
+        self._internal_steps((10, self.manager, self.branch1))
+        # resupply from the main warehouse: not matched, direct storekeeper approval
+        resupply = self._transfer(self.storekeeper, self.main_wh, self.branch1, 5).with_env(self.env)
+        self.assertFalse(resupply.internal_approval_required)
+        self.assertFalse(resupply.can_submit_internal_approval)
+        resupply.with_user(self.storekeeper).action_approve_transfer()
+        self.assertEqual(resupply.transfer_status, 'approved')
+        # leaving Branch One: matched, so the direct Approve submits it for approval
+        branch = self._transfer(self.branch1_user, self.branch1, self.branch2, 5).with_env(self.env)
+        self.assertTrue(branch.internal_approval_required)
+        branch.with_user(self.branch1_user).action_approve_transfer()
+        self.assertEqual((branch.state, branch.transfer_status), ('to_approve', 'to_approve'))
+        self.assertEqual(self._approval_required(branch).user_id, self.manager)
+
+    def test_13_transfers_approved_before_steps(self):
+        in_transit = self._transfer(self.storekeeper, self.main_wh, self.branch1, 5).with_env(self.env)
+        in_transit.with_user(self.storekeeper).action_approve_transfer()
+        in_transit.with_user(self.storekeeper).action_dispatch_goods()
+        approved = self._transfer(self.storekeeper, self.main_wh, self.branch1, 5).with_env(self.env)
+        approved.with_user(self.storekeeper).action_approve_transfer()
+        self._internal_steps((10, self.manager, None))
+        # already dispatched: received as usual, not sent back for approval
+        in_transit.with_user(self.branch1_user).action_confirm_receipt()
+        self.assertEqual(in_transit.transfer_status, 'done')
+        # approved directly but not dispatched: must now clear the approval steps
+        with self.assertRaisesRegex(UserError, 'approval steps'):
+            approved.with_user(self.storekeeper).action_dispatch_goods()
+        self.assertTrue(approved.can_submit_internal_approval)
+        approved.with_user(self.storekeeper).action_submit_internal_transfer_approval()
+        approved.with_user(self.manager).button_approve_delivery()
+        approved.with_user(self.storekeeper).action_dispatch_goods()
+        self.assertEqual(approved.transfer_status, 'transit')

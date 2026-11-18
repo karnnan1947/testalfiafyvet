@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': "Alfiafy Stock - Branch Transfers, Expiry Alerts & Stock Controls",
-    'version': '20.0.1.0.0',
+    'version': '20.0.1.1.0',
     'category': 'Inventory/Inventory',
     'summary': "DES00138 - Branch transfer limit and status tracking, delayed transit "
                "alerts, stock-take variance approval, branch near-expiry alerts, "
@@ -12,8 +12,11 @@ Alfiafy Stock (DES00138)
 BRD 1.5 points #14, #15, #16, #18, #19, #20 and #28:
 
 * Branch-to-branch transfer limit per product (Max Transfer Qty).
-* Internal transfer status: Draft, Approved, In Transit, Received, with
-  Dispatch Goods / Confirm Receipt buttons and a delayed flag (> 48 h in transit).
+* Internal transfer status: Draft, To Approve, Approved, In Transit, Received,
+  with Dispatch Goods / Confirm Receipt buttons and a delayed flag (> 48 h in
+  transit). When Internal Transfer approval steps are configured
+  (sale_and_purchase_approvals_steps), the transfer is submitted for approval
+  and goes through the approvers by sequence before it can be dispatched.
 * Daily alert for transfers in transit for more than 48 hours.
 * Stock-take variance approval: a count difference above 500 (configurable)
   applied by a non-manager waits for the Stock Manager.
@@ -32,6 +35,7 @@ BRD 1.5 points #14, #15, #16, #18, #19, #20 and #28:
         'purchase',
         'product_expiry',
         'sale_stock',
+        'sale_and_purchase_approvals_steps',
     ],
     'data': [
         'security/ir.access.csv',

@@ -1,6 +1,6 @@
 {
     "name": "Sale and Purchase Approvals",
-    "version": "20.0.1.0.0",
+    "version": "20.0.1.1.0",
     "author": "AGM Global Services",
     "license": "LGPL-3",
     # Odoo 20: the Alternatives tab (alternative_po_ids) moved from
