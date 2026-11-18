@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 TRANSIT_DELAY_HOURS = 48
 DELAY_ACTIVITY_SUMMARY = "Transfer in transit for more than 48 hours"
@@ -23,6 +23,36 @@ class StockPicking(models.Model):
     is_delayed = fields.Boolean(
         string="Delayed", compute='_compute_is_delayed',
         help="In transit for more than 48 hours.")
+    can_dispatch_transfer = fields.Boolean(
+        string="Can Approve / Dispatch Transfer",
+        compute='_compute_can_dispatch_transfer',
+        help="True if the current user is a Stock Manager or belongs to the dispatching warehouse.")
+
+    @api.depends('picking_type_code', 'location_id')
+    def _compute_can_dispatch_transfer(self):
+        is_manager = self.env.user.has_group('stock.group_stock_manager')
+        user_wh = self.env.user.property_warehouse_id
+        for picking in self:
+            if picking.picking_type_code != 'internal':
+                picking.can_dispatch_transfer = False
+            elif is_manager:
+                picking.can_dispatch_transfer = True
+            else:
+                src_wh = picking.location_id.warehouse_id
+                picking.can_dispatch_transfer = bool(src_wh and user_wh and src_wh == user_wh)
+
+    def _check_can_dispatch_transfer(self):
+        if self.env.user.has_group('stock.group_stock_manager'):
+            return
+        user_wh = self.env.user.property_warehouse_id
+        for picking in self:
+            src_wh = picking.location_id.warehouse_id
+            if not (src_wh and user_wh and src_wh == user_wh):
+                raise AccessError(self.env._(
+                    "Only the storekeeper of %(wh)s or a Stock Manager can approve or dispatch %(name)s.",
+                    wh=src_wh.name if src_wh else self.env._("the dispatching warehouse"),
+                    name=picking.name,
+                ))
 
     @api.depends('transfer_status', 'dispatch_date')
     def _compute_is_delayed(self):
@@ -41,6 +71,7 @@ class StockPicking(models.Model):
     def action_approve_transfer(self):
         """Storekeeper review: Draft -> Approved."""
         self._check_internal_open()
+        self._check_can_dispatch_transfer()
         for picking in self:
             if picking.transfer_status != 'draft':
                 raise UserError(self.env._("Only a draft transfer can be approved (%s).", picking.name))
@@ -53,6 +84,7 @@ class StockPicking(models.Model):
     def action_dispatch_goods(self):
         """Approved -> In Transit; records the dispatch date."""
         self._check_internal_open()
+        self._check_can_dispatch_transfer()
         for picking in self:
             if picking.transfer_status != 'approved':
                 raise UserError(self.env._("Approve %s before dispatching it.", picking.name))
@@ -64,6 +96,19 @@ class StockPicking(models.Model):
                     picking.name, picking.location_id.display_name))
         self.write({'transfer_status': 'transit', 'dispatch_date': fields.Datetime.now()})
         return True
+
+    def button_validate(self):
+        """Block direct validation of internal transfers before dispatch."""
+        not_dispatched = self.filtered(
+            lambda p: p.picking_type_code == 'internal' and p.transfer_status != 'transit'
+        )
+        if not_dispatched:
+            raise UserError(self.env._(
+                "Internal transfer %s cannot be validated directly. "
+                "It must be approved and dispatched first, then confirmed via Confirm Receipt.",
+                ", ".join(not_dispatched.mapped('name')),
+            ))
+        return super().button_validate()
 
     def action_confirm_receipt(self):
         """In Transit -> Received: validates the transfer, moving the stock into

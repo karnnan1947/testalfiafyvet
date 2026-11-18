@@ -6,15 +6,23 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header/button[@name='action_confirm']" position="before">
+                <field name="can_dispatch_transfer" invisible="1"/>
                 <button name="action_approve_transfer" string="Approve" type="object" class="oe_highlight"
                         groups="stock.group_stock_user"
-                        invisible="picking_type_code != 'internal' or transfer_status != 'draft' or state in ('done', 'cancel')"/>
+                        invisible="picking_type_code != 'internal' or transfer_status != 'draft' or state in ('done', 'cancel') or not can_dispatch_transfer"/>
                 <button name="action_dispatch_goods" string="Dispatch Goods" type="object" class="oe_highlight"
                         groups="stock.group_stock_user"
-                        invisible="picking_type_code != 'internal' or transfer_status != 'approved' or state in ('done', 'cancel')"/>
+                        invisible="picking_type_code != 'internal' or transfer_status != 'approved' or state in ('done', 'cancel') or not can_dispatch_transfer"/>
                 <button name="action_confirm_receipt" string="Confirm Receipt" type="object" class="oe_highlight"
                         groups="stock.group_stock_user"
                         invisible="picking_type_code != 'internal' or transfer_status != 'transit' or state in ('done', 'cancel')"/>
+            </xpath>
+            <!-- Block direct Validate on internal transfers: must flow Draft -> Approved -> In Transit -> Confirm Receipt -->
+            <xpath expr="//header/button[@name='button_validate'][1]" position="attributes">
+                <attribute name="invisible">validate_button_style != 'primary' or picking_type_code == 'internal'</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='button_validate'][2]" position="attributes">
+                <attribute name="invisible">validate_button_style != 'secondary' or picking_type_code == 'internal'</attribute>
             </xpath>
             <!-- internal transfers: transfer status bar instead of the standard one (except when cancelled) -->
             <xpath expr="//header/field[@name='state'][2]" position="attributes">

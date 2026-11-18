@@ -73,10 +73,24 @@ class TestAlfiafyStock(TransactionCase):
 
     # 2. status lifecycle
     def test_02_transfer_status_lifecycle(self):
-        picking = self._transfer(self.storekeeper, self.main_wh, self.branch1, 20)
+        picking = self._transfer(self.branch1_user, self.main_wh, self.branch1, 20)
         self.assertEqual(picking.transfer_status, 'draft')
+        # requester from another branch cannot approve, dispatch, or validate directly
+        self.assertFalse(picking.with_user(self.branch1_user).can_dispatch_transfer)
+        with self.assertRaises(AccessError):
+            picking.with_user(self.branch1_user).action_approve_transfer()
+        with self.assertRaisesRegex(UserError, 'cannot be validated directly'):
+            picking.with_user(self.branch1_user).button_validate()
+        with self.assertRaisesRegex(UserError, 'cannot be validated directly'):
+            picking.with_user(self.storekeeper).button_validate()
+        # storekeeper of the dispatching warehouse reviews, approves, and dispatches
+        self.assertTrue(picking.with_user(self.storekeeper).can_dispatch_transfer)
         picking.with_user(self.storekeeper).action_approve_transfer()
         self.assertEqual(picking.transfer_status, 'approved')
+        with self.assertRaises(AccessError):
+            picking.with_user(self.branch1_user).action_dispatch_goods()
+        with self.assertRaisesRegex(UserError, 'cannot be validated directly'):
+            picking.with_user(self.storekeeper).button_validate()
         picking.with_user(self.storekeeper).action_dispatch_goods()
         self.assertEqual((picking.transfer_status, picking.state), ('transit', 'assigned'))
         self.assertTrue(picking.dispatch_date)
