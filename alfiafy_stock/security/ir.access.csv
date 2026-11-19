@@ -1,3 +1,4 @@
 id,name,model_id,group_id/id,operation,domain
 access_stock_quant_branch_user,stock.quant branch users (all branches),stock.quant,stock.group_stock_user,r,
 access_stock_location_branch_user,stock.location branch users (all branches),stock.location,stock.group_stock_user,r,
+rule_stock_quant_branch_visibility,Stock Quant: Branch-wise visibility,stock.quant,,r,"[(1, '=', 1)] if user.can_view_all_branches_stock else ['|', ('location_id.usage', '!=', 'internal'), ('location_id.warehouse_id', 'in', user.property_warehouse_id.ids + user.visible_stock_warehouse_ids.ids)]"

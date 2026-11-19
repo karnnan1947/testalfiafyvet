@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Branch-wise stock visibility control (BRD 1.5 #5) -->
+    <record id="group_stock_all_branches" model="res.groups">
+        <field name="name">View All Branches Stock</field>
+        <field name="implied_ids" eval="[Command.link(ref('stock.group_stock_user'))]"/>
+        <field name="user_ids" eval="[Command.link(ref('base.user_root')), Command.link(ref('base.user_admin'))]"/>
+    </record>
+    <record id="stock.group_stock_manager" model="res.groups">
+        <field name="implied_ids" eval="[Command.link(ref('alfiafy_stock.group_stock_all_branches'))]"/>
+    </record>
+
     <!-- Stock disposal (scrap) restricted to the Stock Manager -->
     <record id="stock.stock_scrapped_moves_action" model="ir.actions.act_window">
         <field name="group_ids" eval="[Command.set([ref('stock.group_stock_manager')])]"/>
@@ -12,5 +22,13 @@
     </record>
     <record id="stock.menu_stock_scrap" model="ir.ui.menu">
         <field name="group_ids" eval="[Command.set([ref('stock.group_stock_manager')])]"/>
+    </record>
+
+    <!-- Reporting menu and Stock by Location visible to Inventory Users (valuation/performance menus remain restricted) -->
+    <record id="stock.menu_warehouse_report" model="ir.ui.menu">
+        <field name="group_ids" eval="[Command.link(ref('stock.group_stock_user'))]"/>
+    </record>
+    <record id="stock.menu_valuation" model="ir.ui.menu">
+        <field name="group_ids" eval="[Command.link(ref('stock.group_stock_user'))]"/>
     </record>
 </odoo>

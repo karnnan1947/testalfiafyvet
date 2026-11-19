@@ -124,7 +124,7 @@ class StockPicking(models.Model):
                     "%s must be approved through its approval steps before it can be "
                     "dispatched: click Submit for Approval.", picking.name))
             if picking.state != 'assigned':
-                picking.action_assign()
+                picking.sudo().action_assign()
             if picking.state != 'assigned':
                 raise UserError(self.env._(
                     "%s cannot be dispatched: the goods are not available in %s.",
@@ -205,6 +205,8 @@ class StockPicking(models.Model):
     def action_confirm_receipt(self):
         """In Transit -> Received: validates the transfer, moving the stock into
         the destination branch."""
+        if not self.env.user.has_group('stock.group_stock_user'):
+            raise AccessError(self.env._("Only Inventory users can confirm receipt of an internal transfer."))
         self._check_internal_open()
         for picking in self:
             if picking.transfer_status != 'transit':
@@ -213,7 +215,9 @@ class StockPicking(models.Model):
                 if move.uom_id.is_zero(move.quantity):
                     move.quantity = move.product_uom_qty
                 move.picked = True
-        return self.button_validate()
+        # Validate with sudo() so branch users restricted to their own warehouse's
+        # quants can still receive stock dispatched from the main warehouse.
+        return self.sudo().button_validate()
 
     def _action_done(self):
         res = super()._action_done()

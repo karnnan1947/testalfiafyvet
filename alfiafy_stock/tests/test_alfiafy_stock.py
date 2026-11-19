@@ -208,13 +208,45 @@ class TestAlfiafyStock(TransactionCase):
                       'stock.action_scrap_lot', 'stock.menu_stock_scrap'):
             self.assertEqual(self.env.ref(xmlid).group_ids, manager_group, xmlid)
 
-    # 8. visibility
+    # 8. branch-wise stock visibility control (BRD 1.5 #5)
     def test_08_branch_visibility(self):
+        # Put 12 units in branch2 so branch2_user has own-branch stock to verify
+        self.env['stock.quant']._update_available_quantity(
+            self.product, self.branch2.lot_stock_id, 12
+        )
         Quant = self.env['stock.quant'].with_user(self.branch2_user)
-        self.assertTrue(Quant.search([('location_id', '=', self.branch1.lot_stock_id.id)]))
-        self.assertTrue(Quant.search([('location_id', '=', self.main_wh.lot_stock_id.id)]))
+        prod_b2 = self.product.with_user(self.branch2_user)
+
+        # Default: branch2_user sees ONLY branch2 stock (main_wh and branch1 hidden)
+        self.assertTrue(Quant.search([('location_id', '=', self.branch2.lot_stock_id.id)]))
+        self.assertFalse(Quant.search([('location_id', '=', self.branch1.lot_stock_id.id)]))
+        self.assertFalse(Quant.search([('location_id', '=', self.main_wh.lot_stock_id.id)]))
+        self.assertEqual(prod_b2.qty_available, 12)
         with self.assertRaises(AccessError):
             self.env['product.value'].with_user(self.branch2_user).search([], limit=1)
+
+        # Granular grant: add main_wh to Additional Visible Stock Warehouses
+        self.branch2_user.visible_stock_warehouse_ids = [Command.set([self.main_wh.id])]
+        self.env.invalidate_all()
+        self.assertTrue(Quant.search([('location_id', '=', self.main_wh.lot_stock_id.id)]))
+        self.assertFalse(Quant.search([('location_id', '=', self.branch1.lot_stock_id.id)]))
+        self.assertEqual(prod_b2.qty_available, 112)
+
+        # All-branches group grant: sees main_wh, branch1, and branch2 (valuation still blocked)
+        all_branches_grp = self.env.ref('alfiafy_stock.group_stock_all_branches')
+        self.branch2_user.group_ids = [Command.link(all_branches_grp.id)]
+        self.env.invalidate_all()
+        self.assertTrue(Quant.search([('location_id', '=', self.branch1.lot_stock_id.id)]))
+        self.assertTrue(Quant.search([('location_id', '=', self.main_wh.lot_stock_id.id)]))
+        self.assertEqual(prod_b2.qty_available, 142)
+        with self.assertRaises(AccessError):
+            self.env['product.value'].with_user(self.branch2_user).search([], limit=1)
+
+        # Stock Manager automatically sees all branches
+        QuantMgr = self.env['stock.quant'].with_user(self.manager)
+        self.assertTrue(QuantMgr.search([('location_id', '=', self.branch1.lot_stock_id.id)]))
+        self.assertTrue(QuantMgr.search([('location_id', '=', self.branch2.lot_stock_id.id)]))
+        self.assertTrue(QuantMgr.search([('location_id', '=', self.main_wh.lot_stock_id.id)]))
 
     # 9-13. Internal Transfer approval steps (sale_and_purchase_approvals_steps)
     def _internal_steps(self, *rows):

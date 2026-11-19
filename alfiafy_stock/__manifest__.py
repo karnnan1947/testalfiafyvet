@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': "Alfiafy Stock - Branch Transfers, Expiry Alerts & Stock Controls",
-    'version': '20.0.1.1.0',
+    'version': '20.0.1.2.0',
     'category': 'Inventory/Inventory',
     'summary': "DES00138 - Branch transfer limit and status tracking, delayed transit "
                "alerts, stock-take variance approval, branch near-expiry alerts, "
@@ -38,10 +38,11 @@ BRD 1.5 points #14, #15, #16, #18, #19, #20 and #28:
         'sale_and_purchase_approvals_steps',
     ],
     'data': [
-        'security/ir.access.csv',
         'security/stock_security.xml',
+        'security/ir.access.csv',
         'data/cron_data.xml',
         'views/product_template_views.xml',
+        'views/res_users_views.xml',
         'views/stock_picking_views.xml',
         'views/stock_quant_views.xml',
         'views/stock_scrap_views.xml',
